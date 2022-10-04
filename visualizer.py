@@ -26,6 +26,13 @@ from viz import performance_widget
 from viz import capture_widget
 from viz import layer_widget
 from viz import equivariance_widget
+from viz import osc_widget
+
+from pythonosc.osc_server import AsyncIOOSCUDPServer
+from pythonosc.dispatcher import Dispatcher
+import asyncio
+from typing import List, Any
+import datetime
 
 #----------------------------------------------------------------------------
 
@@ -47,6 +54,9 @@ class Visualizer(imgui_window.ImguiWindow):
         self.label_w            = 0
         self.button_w           = 0
 
+        # Osc.
+        self.down = True
+
         # Widgets.
         self.pickle_widget      = pickle_widget.PickleWidget(self)
         self.latent_widget      = latent_widget.LatentWidget(self)
@@ -56,6 +66,8 @@ class Visualizer(imgui_window.ImguiWindow):
         self.capture_widget     = capture_widget.CaptureWidget(self)
         self.layer_widget       = layer_widget.LayerWidget(self)
         self.eq_widget          = equivariance_widget.EquivarianceWidget(self)
+        self.osc_widget         = osc_widget.OscWidget(self)
+
 
         if capture_dir is not None:
             self.capture_widget.path = capture_dir
@@ -104,6 +116,8 @@ class Visualizer(imgui_window.ImguiWindow):
             self.skip_frame() # Layout changed.
 
     def draw_frame(self):
+        osc_control(self)
+
         self.begin_frame()
         self.args = dnnlib.EasyDict()
         self.pane_w = self.font_size * 45
@@ -134,6 +148,8 @@ class Visualizer(imgui_window.ImguiWindow):
         with imgui_utils.grayed_out(not self.result.get('has_input_transform', False)):
             expanded, _visible = imgui_utils.collapsing_header('Equivariance', default=True)
             self.eq_widget(expanded)
+            expanded, _visible = imgui_utils.collapsing_header('Osc', default=True)
+            self.osc_widget(expanded)
 
         # Render.
         if self.is_skipping_frames():
@@ -172,6 +188,8 @@ class Visualizer(imgui_window.ImguiWindow):
         self._adjust_font_size()
         imgui.end()
         self.end_frame()
+
+#----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
 
@@ -263,15 +281,147 @@ class AsyncRenderer:
 
 #----------------------------------------------------------------------------
 
-@click.command()
-@click.argument('pkls', metavar='PATH', nargs=-1)
-@click.option('--capture-dir', help='Where to save screenshot captures', metavar='PATH', default=None)
-@click.option('--browse-dir', help='Specify model path for the \'Browse...\' button', metavar='PATH')
-def main(
-    pkls,
-    capture_dir,
-    browse_dir
+def osc_control(self):
+    
+    if self.eq_widget.xlate.y > .25 and self.down:
+        self.down = False
+    elif self.eq_widget.xlate.y < -.25 and not self.down:
+        self.down = True
+
+    if self.down:
+        self.eq_widget.xlate.y += 0.001
+    else:
+        self.eq_widget.xlate.y -= 0.001
+
+# osc setup
+count_size = [0, 0]
+
+ip = "127.0.0.1"
+port = 8000
+
+hands_vec = [False, False]
+screen_size = [1., 1.]
+hands_id = [-1, -1]
+hands_time = [0., 0.]
+hands_confidence = [0., 0.]
+hands_palm_pos = [[0., 0., 0.], [0., 0., 0.]]
+hands_palm_vel = [[0., 0., 0.], [0., 0., 0.]]
+hands_palm_norm = [[0., 0., 0.], [0., 0., 0.]]
+hands_palm_dir = [[0., 0., 0.], [0., 0., 0.]]
+hands_palm_pos_stab = [[0., 0., 0.], [0., 0., 0.]]
+
+
+
+# dispatch and handler functions
+def filter_handler(address, *args: List[Any]) -> None:
+    count_size[1] += 1
+    if count_size[1] % 30 == 0:
+        current_time = datetime.datetime.now()
+        print(f"{address}: {args} ---> {count_size[0]} / {current_time}")
+
+
+def global_handler(address: str, *args: List[Any]) -> None:
+    # # We expect two float arguments
+    # if not len(args) == 2 or type(args[0]) is not float or type(args[1]) is not float:
+    #     return
+
+    # # Check that address starts with filter
+    # if not address[:-1] == "/filter":  # Cut off the last character
+    #     return
+    hands_vec[0] = bool(args[0])
+    hands_vec[1] = bool(args[1])
+    screen_size[0] = float(args[2])
+    screen_size[1] = float(args[3])
+
+    
+    count_size[0] += 1
+    if count_size[0] % 300 == 0:
+        current_time = datetime.datetime.now()
+        print(f"Setting global values: {hands_vec[0]}, {hands_vec[1]}. Screen sizes: {screen_size[0]}, {screen_size[1]} ---> {count_size[0]} / {current_time}")
+
+
+def hands_handler(address: str, *args: List[Any]) -> None:
+    # print(address[26:30])
+    if not (address[26:30] == "hand" or address[27:31] == "hand"):
+        return
+
+
+    chirality_indx = 0
+    if address[21:26] == "right":       #test: finding the position of the hand indicator
+        chirality_indx = 1
+
+    hands_id[chirality_indx] = int(args[0])
+    hands_time[chirality_indx] = float(args[1])
+    hands_confidence[chirality_indx] = float(args[2])
+
+    curr_vec = [0., 0., 0.]
+    bias = 3
+
+    # get hand data
+    for i in range(3):
+        curr_vec[i] = args[i + bias]
+    bias += 3
+    hands_palm_pos[chirality_indx] = curr_vec
+
+    for i in range(3):
+        curr_vec[i] = args[i + bias]
+    bias += 3
+    hands_palm_vel[chirality_indx] = curr_vec
+
+    for i in range(3):
+        curr_vec[i] = args[i + bias]
+    bias += 3
+    hands_palm_norm[chirality_indx] = curr_vec
+
+    for i in range(3):
+        curr_vec[i] = args[i + bias]
+    bias += 3
+    hands_palm_dir[chirality_indx] = curr_vec
+
+    for i in range(3):
+        curr_vec[i] = args[i + bias]
+    bias += 3
+    hands_palm_pos_stab[chirality_indx] = curr_vec
+
+    
+    count_size[1] += 1
+    if count_size[1] % 30 == 0:
+        current_time = datetime.datetime.now()
+        print(f"Setting global values: {chirality_indx}, {hands_palm_pos[chirality_indx]}, { hands_palm_vel[chirality_indx]} ---> {count_size[1]} / {current_time}")
+
+
+
+
+dispatcher = Dispatcher()
+dispatcher.map("/hands_global", global_handler)
+dispatcher.map("/hand_data_projected*", hands_handler)
+# dispatcher.map("/interaction", filter_handler)
+
+# dispatcher.set_default_handler(filter_handler)
+
+
+async def loop(viz):
+    while not viz.should_close():
+        # print("ok")
+        viz.draw_frame()
+        for i in range (500):
+            await asyncio.sleep(0)
+
+
+
+# @click.command()
+# @click.argument('pkls', metavar='PATH', nargs=-1)
+# @click.option('--capture-dir', help='Where to save screenshot captures', metavar='PATH', default=None)
+# @click.option('--browse-dir', help='Specify model path for the \'Browse...\' button', metavar='PATH')
+async def main(
+    # pkls,
+    # capture_dir,
+    # browse_dir
 ):
+
+    browse_dir = None
+    capture_dir = "./out"
+    pkls = []
     """Interactive model visualizer.
 
     Optional PATH argument can be used specify which .pkl file to load.
@@ -321,14 +471,21 @@ def main(
         for url in pretrained:
             viz.add_recent_pickle(url)
 
+    server = AsyncIOOSCUDPServer((ip, port), dispatcher, asyncio.get_event_loop())
+    transport, protocol = await server.create_serve_endpoint()  # Create datagram endpoint and start serving
+
     # Run.
-    while not viz.should_close():
-        viz.draw_frame()
+    # while not viz.should_close():
+    #     viz.draw_frame()
+    await loop(viz)  # Enter main loop of program
+
+    transport.close()  # Clean up serve endpoint
     viz.close()
 
 #----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
+    # main()
 
 #----------------------------------------------------------------------------

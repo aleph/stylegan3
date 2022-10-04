@@ -1,0 +1,9 @@
+cd tensor\stylegan3
+conda activate stylegan3
+python visualizer.py
+
+
+
+conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch
+
+python gen_images.py --outdir=out --trunc=1 --seeds=2 --network=https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl
