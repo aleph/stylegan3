@@ -3,6 +3,9 @@ conda activate stylegan3
 python visualizer.py
 
 
+C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
+
+
 
 conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch
 

@@ -35,7 +35,7 @@ class TruncationNoiseWidget:
             imgui.text('Truncate')
             imgui.same_line(viz.label_w)
             with imgui_utils.item_width(viz.font_size * 10), imgui_utils.grayed_out(num_ws == 0):
-                _changed, self.trunc_psi = imgui.slider_float('##psi', self.trunc_psi, -1, 2, format='Psi %.2f')
+                _changed, self.trunc_psi = imgui.slider_float('##psi', self.trunc_psi, -1.5, 1.5, format='Psi %.2f')
             imgui.same_line()
             if num_ws == 0:
                 imgui_utils.button('Cutoff 0', width=(viz.font_size * 8 + viz.spacing), enabled=False)

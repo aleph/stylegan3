@@ -11,6 +11,7 @@ import os
 
 import multiprocessing
 import numpy as np
+# from sympy import Min
 import imgui
 import dnnlib
 from gui_utils import imgui_window
@@ -56,6 +57,8 @@ class Visualizer(imgui_window.ImguiWindow):
 
         # Osc.
         self.down = True
+        # self.drag = 0.05
+        # self.inertia = 0.9
 
         # Widgets.
         self.pickle_widget      = pickle_widget.PickleWidget(self)
@@ -116,8 +119,6 @@ class Visualizer(imgui_window.ImguiWindow):
             self.skip_frame() # Layout changed.
 
     def draw_frame(self):
-        osc_control(self)
-
         self.begin_frame()
         self.args = dnnlib.EasyDict()
         self.pane_w = self.font_size * 45
@@ -281,18 +282,6 @@ class AsyncRenderer:
 
 #----------------------------------------------------------------------------
 
-def osc_control(self):
-    
-    if self.eq_widget.xlate.y > .25 and self.down:
-        self.down = False
-    elif self.eq_widget.xlate.y < -.25 and not self.down:
-        self.down = True
-
-    if self.down:
-        self.eq_widget.xlate.y += 0.001
-    else:
-        self.eq_widget.xlate.y -= 0.001
-
 # osc setup
 count_size = [0, 0]
 
@@ -325,9 +314,6 @@ def global_handler(address: str, *args: List[Any]) -> None:
     # if not len(args) == 2 or type(args[0]) is not float or type(args[1]) is not float:
     #     return
 
-    # # Check that address starts with filter
-    # if not address[:-1] == "/filter":  # Cut off the last character
-    #     return
     hands_vec[0] = bool(args[0])
     hands_vec[1] = bool(args[1])
     screen_size[0] = float(args[2])
@@ -335,7 +321,7 @@ def global_handler(address: str, *args: List[Any]) -> None:
 
     
     count_size[0] += 1
-    if count_size[0] % 300 == 0:
+    if count_size[0] % 3000 == 0:
         current_time = datetime.datetime.now()
         print(f"Setting global values: {hands_vec[0]}, {hands_vec[1]}. Screen sizes: {screen_size[0]}, {screen_size[1]} ---> {count_size[0]} / {current_time}")
 
@@ -361,49 +347,118 @@ def hands_handler(address: str, *args: List[Any]) -> None:
     for i in range(3):
         curr_vec[i] = args[i + bias]
     bias += 3
-    hands_palm_pos[chirality_indx] = curr_vec
+    hands_palm_pos[chirality_indx] = curr_vec.copy()
+    # print(f"{curr_vec[0]} | {curr_vec[1]} | {curr_vec[2]}")
 
     for i in range(3):
         curr_vec[i] = args[i + bias]
     bias += 3
-    hands_palm_vel[chirality_indx] = curr_vec
+    hands_palm_vel[chirality_indx] = curr_vec.copy()
+    # print(f"{curr_vec[0]} | {curr_vec[1]} | {curr_vec[2]}")
 
     for i in range(3):
         curr_vec[i] = args[i + bias]
     bias += 3
-    hands_palm_norm[chirality_indx] = curr_vec
+    hands_palm_norm[chirality_indx] = curr_vec.copy()
+    # print(f"{curr_vec[0]} | {curr_vec[1]} | {curr_vec[2]}")
 
     for i in range(3):
         curr_vec[i] = args[i + bias]
     bias += 3
-    hands_palm_dir[chirality_indx] = curr_vec
+    hands_palm_dir[chirality_indx] = curr_vec.copy()
+    # print(f"{curr_vec[0]} | {curr_vec[1]} | {curr_vec[2]}")
 
     for i in range(3):
         curr_vec[i] = args[i + bias]
     bias += 3
     hands_palm_pos_stab[chirality_indx] = curr_vec
+    # print(f"{curr_vec[0]} | {curr_vec[1]} | {curr_vec[2]}")
+    # print({bias})
+    # print(f"{hands_palm_pos[chirality_indx][0]} | {hands_palm_pos[chirality_indx][1]} | {hands_palm_pos[chirality_indx][2]}")
+    # print("------------------")
+
 
     
     count_size[1] += 1
-    if count_size[1] % 30 == 0:
+    if count_size[1] % 300 == 0:
         current_time = datetime.datetime.now()
         print(f"Setting global values: {chirality_indx}, {hands_palm_pos[chirality_indx]}, { hands_palm_vel[chirality_indx]} ---> {count_size[1]} / {current_time}")
-
-
 
 
 dispatcher = Dispatcher()
 dispatcher.map("/hands_global", global_handler)
 dispatcher.map("/hand_data_projected*", hands_handler)
-# dispatcher.map("/interaction", filter_handler)
 
-# dispatcher.set_default_handler(filter_handler)
+# control functions
+def osc_setup(viz):
+    viz.osc_widget.param_0 = 0.03   #drag
+    viz.osc_widget.param_1 = 0.85   #inertia
+
+
+def osc_control(viz):
+    ch_indx = -1
+    if hands_vec[0] == True:
+        ch_indx = 0
+    elif hands_vec[1] == True:
+        ch_indx = 1
+
+    # params
+    target_speed = 0.05
+    target_psi = -.7
+
+    speed_mult = 1.25
+    max_speed = 7.5
+    psi_mult = 5.
+
+    drag = viz.osc_widget.param_0
+    inertia = viz.osc_widget.param_1
+
+    speed = float(viz.latent_widget.latent.speed)
+    psi = -float(viz.trunc_noise_widget.trunc_psi)
+
+
+    # update ui
+    values = [0., 0., 0., 0.]
+    if (ch_indx >= 0):
+        # values[0] = pow(min(hands_palm_vel[ch_indx][0], max_speed), 1.5)
+        values[0] = min(hands_palm_vel[ch_indx][0], max_speed)
+        values[1] = hands_palm_pos[ch_indx][0]
+        values[2] = hands_palm_norm[ch_indx][2]
+        values[3] = hands_palm_pos[ch_indx][2]
+
+    
+    viz.osc_widget.val_0 = values[0]
+    viz.osc_widget.val_1 = values[1]
+    viz.osc_widget.val_2 = values[2]
+    viz.osc_widget.val_3 = values[3]
+
+
+    # update gan
+    if (ch_indx >= 0):
+        viz.latent_widget.latent.anim = True
+
+        speed = speed_mult * values[0] * (1 - inertia) + speed * inertia
+        psi = (psi_mult * values[3] * (1 - inertia) + .1) + psi * inertia
+
+    # else:
+    target_speed_sign = 1.
+    if speed < 0.:
+        target_speed_sign = -1.
+
+    speed = speed * (1 - drag) + target_speed_sign * target_speed * drag
+    psi = psi * (1 - drag) + target_psi * drag
+    psi = min(psi, 1.6)
+    
+    viz.latent_widget.latent.speed = speed
+    viz.trunc_noise_widget.trunc_psi = -psi
+
 
 
 async def loop(viz):
     while not viz.should_close():
-        # print("ok")
+        osc_control(viz)
         viz.draw_frame()
+
         for i in range (500):
             await asyncio.sleep(0)
 
@@ -422,11 +477,14 @@ async def main(
     browse_dir = None
     capture_dir = "./out"
     pkls = []
+    # pkls = ["https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl"]
+    # pkls = ["C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl"]
     """Interactive model visualizer.
 
     Optional PATH argument can be used specify which .pkl file to load.
     """
     viz = Visualizer(capture_dir=capture_dir)
+    osc_setup(viz)
 
     if browse_dir is not None:
         viz.pickle_widget.search_dirs = [browse_dir]
