@@ -438,7 +438,7 @@ def osc_control(viz):
         viz.latent_widget.latent.anim = True
 
         speed = speed_mult * values[0] * (1 - inertia) + speed * inertia
-        psi = (psi_mult * values[3] * (1 - inertia) + .1) + psi * inertia
+        psi = psi_mult * values[3] * (1 - inertia) + psi * inertia
 
     # else:
     target_speed_sign = 1.
@@ -447,7 +447,6 @@ def osc_control(viz):
 
     speed = speed * (1 - drag) + target_speed_sign * target_speed * drag
     psi = psi * (1 - drag) + target_psi * drag
-    psi = min(psi, 1.6)
     
     viz.latent_widget.latent.speed = speed
     viz.trunc_noise_widget.trunc_psi = -psi

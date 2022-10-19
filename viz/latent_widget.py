@@ -6,6 +6,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
+from itertools import count
 import numpy as np
 import imgui
 import dnnlib
@@ -19,6 +20,7 @@ class LatentWidget:
         self.latent     = dnnlib.EasyDict(x=0, y=0, anim=False, speed=0.25)
         self.latent_def = dnnlib.EasyDict(self.latent)
         self.step_y     = 100
+        self.counter     = 0
 
     def drag(self, dx, dy):
         viz = self.viz
@@ -64,15 +66,58 @@ class LatentWidget:
             if imgui_utils.button('Reset', width=-1, enabled=(self.latent != self.latent_def)):
                 self.latent = dnnlib.EasyDict(self.latent_def)
 
+
         if self.latent.anim:
             self.latent.x += viz.frame_delta * self.latent.speed
-        viz.args.w0_seeds = [] # [[seed, weight], ...]
-        for ofs_x, ofs_y in [[0, 0], [1, 0], [0, 1], [1, 1]]:
-            seed_x = np.floor(self.latent.x) + ofs_x
-            seed_y = np.floor(self.latent.y) + ofs_y
-            seed = (int(seed_x) + int(seed_y) * self.step_y) & ((1 << 32) - 1)
-            weight = (1 - abs(self.latent.x - seed_x)) * (1 - abs(self.latent.y - seed_y))
-            if weight > 0:
-                viz.args.w0_seeds.append([seed, weight])
+
+
+        #test
+        # seed_lists = [[2, 4, 8], [16, 32, 64], [128, 256, 512]]
+        seed_lists = [[4, 8, 2], [64, 32, 16], [512, 256, 128]]
+        seed_plane = 0
+        if self.latent.y > .33:
+            seed_plane = 1
+        elif self.latent.y > .66:
+            seed_plane = 2
+
+        last_val = np.floor(self.latent.x)
+        frac_val = 1 - abs(self.latent.x - np.trunc(self.latent.x))
+        if self.latent.x < 0.:
+             frac_val = 1 - frac_val
+        next_val = np.ceil(self.latent.x)
+
+        last_item = int(last_val)%len(seed_lists[seed_plane])
+        next_item = int(next_val)%len(seed_lists[seed_plane])
+
+        viz.args.w0_seeds = [[seed_lists[seed_plane][last_item], frac_val], [seed_lists[seed_plane][next_item], (1. - frac_val)]] # [[seed, weight], ...]
+        # print(f"self.latent.x: {self.latent.x} | last_val: {last_val} | next_val: {next_val} | [{seed_list[last_item]}, {frac_val}], [{seed_list[next_item]}, {(1. - frac_val)}]")
+
+
+
+        # seed_diff = np.floor(self.latent.x) - last_seed
+        # self.counter += seed_diff
+        # current_item = int(self.counter)%3 
+        # next_item = int(self.counter + 1)%3
+        # if(seed_diff < 0):
+        #     next_item = int(self.counter - 1)%3
+
+        # current_weight = (1 - abs(self.latent.x - np.floor(self.latent.x)))
+        # next_weight = 1 - current_weight
+
+        # viz.args.w0_seeds = [[seed_list[current_item], current_weight], [seed_list[next_item], next_weight]] # [[seed, weight], ...]
+        # print(f"self.counter: {self.counter}, seed_diff:{seed_diff} |curr: {current_item}, next: {next_item} \n [{seed_list[current_item]}, {current_weight}], [{seed_list[next_item]}, {next_weight}]")
+
+
+
+        # viz.args.w0_seeds = [] # [[seed, weight], ...]
+        # for ofs_x, ofs_y in [[0, 0], [1, 0], [0, 1], [1, 1]]:
+        #     seed_x = np.floor(self.latent.x) + ofs_x
+        #     seed_y = np.floor(self.latent.y) + ofs_y
+        #     seed = (int(seed_x) + int(seed_y) * self.step_y) & ((1 << 32) - 1)
+        #     weight = (1 - abs(self.latent.x - seed_x)) * (1 - abs(self.latent.y - seed_y))
+        #     if weight > 0:
+        #         viz.args.w0_seeds.append([seed, weight])
+        #         print(f" | [{seed}, {weight}]")
+        # print
 
 #----------------------------------------------------------------------------

@@ -5,8 +5,20 @@ python visualizer.py
 
 C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
 
-
-
-conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch
+python gen_images.py --outdir=_out\CLIPdataset\10 --trunc=1. --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
+python gen_images.py --outdir=_out\CLIPdataset\08 --trunc=.8 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
+python gen_images.py --outdir=_out\CLIPdataset\06 --trunc=.6 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
+python gen_images.py --outdir=_out\CLIPdataset\04 --trunc=.4 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
+python gen_images.py --outdir=_out\CLIPdataset\02 --trunc=.2 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
 
 python gen_images.py --outdir=out --trunc=1 --seeds=2 --network=https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl
+
+
+python gen_paths.py --outdir=_out\paths --trunc=.8  --network=models\network-snapshot-010990.pkl
+
+
+
+python compute_pca.py --image_path C:\Users\aless\tensor\stylegan3\_out\CLIPdataset --extracted_features_path=extracted_features
+
+python text_optimize.py --path C:\Users\aless\tensor\stylegan3\_out\CLIPdataset\*.png
+python text_optimize.py --path CLIPdataset/*.png

@@ -13,12 +13,16 @@ import re
 from typing import List, Optional, Tuple, Union
 
 import click
+from matplotlib.pyplot import axis
 import dnnlib
 import numpy as np
+from numpy import linalg as LA
 import PIL.Image
 import torch
 
 import legacy
+
+import csv
 
 #----------------------------------------------------------------------------
 
@@ -70,7 +74,7 @@ def make_transform(translate: Tuple[float,float], angle: float):
 
 @click.command()
 @click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
-@click.option('--seeds', type=parse_range, help='List of random seeds (e.g., \'0,1,4-6\')', required=True)
+@click.option('--seeds', type=parse_range, help='List of random seeds (e.g., \'0,1,4-6\')', required=False)
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=1, show_default=True)
 @click.option('--class', 'class_idx', type=int, help='Class label (unconditional if not specified)')
 @click.option('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const', show_default=True)
@@ -120,21 +124,86 @@ def generate_images(
             print ('warn: --class=lbl ignored when running on an unconditional network')
 
     # Generate images.
-    for seed_idx, seed in enumerate(seeds):
-        print('Generating image for seed %d (%d/%d) ...' % (seed, seed_idx, len(seeds)))
-        z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
+    input_seed_list = [[2, 4, 8], [16, 32, 64], [128, 256, 512]]
+    seed_list = []
 
-        # Construct an inverse rotation/translation matrix and pass to the generator.  The
-        # generator expects this matrix as an inverse to avoid potentially failing numerical
-        # operations in the network.
-        if hasattr(G.synthesis, 'input'):
-            m = make_transform(translate, rotate)
-            m = np.linalg.inv(m)
-            G.synthesis.input.transform.copy_(torch.from_numpy(m))
+    print(f"Generating {len(input_seed_list)} paths from seed_list")
+    for list_idx, list in enumerate(input_seed_list):
+        pos_array = []
+        pos_list = []
+        idx_list = []
 
-        img = G(z, label, truncation_psi=truncation_psi, noise_mode=noise_mode)
-        img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
-        PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/seed_{seed:04d}_t_{truncation_psi:0.2f}.png')
+        out_list = []
+        for seed_idx, seed in enumerate(list):
+            # z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
+            z_m = np.random.RandomState(seed).randn(1, G.z_dim)
+            if seed_idx == 0:
+                pos_array = z_m
+            else:
+                pos_array = np.append(pos_array, z_m, axis=0)
+
+            z = np.random.RandomState(seed).randn(G.z_dim)
+            pos_list.append(z)
+            idx_list.append(seed_idx)
+
+        print(f"before mean: {pos_array}, dimension: {pos_array.ndim}")
+        pos_array = np.mean(pos_array, axis=0)
+        print(f"after mean: {pos_array}, dimension: {pos_array.ndim}")
+
+        current_idx = 0
+        current_item = 0
+        idx_counter = 0
+
+        while current_idx >= 0 or idx_counter > 10000:
+            min_dist = 10000000.0
+            min_idx = -1
+            current_item = idx_list[current_idx]
+            out_list.append(list[current_item])
+            print(f"out_list: {out_list}")
+
+            current_pos = pos_list[current_idx]
+            print(f"current item: {list[current_item]} | popping {current_idx} of {len(pos_list)}")
+            pos_list.pop(current_idx)
+            idx_list.pop(current_idx)
+            print(f"length: {len(pos_list)}")
+
+            for t_idx, t in enumerate(pos_list):
+                distance = np.linalg.norm(t - current_pos)
+
+                if distance < min_dist:
+                    min_dist = distance
+                    min_idx = t_idx
+                    # item_idx = idx_list[t_idx]
+                    print(f"min_idx: {t_idx} | distance: {distance}")
+
+            current_idx = min_idx
+            idx_counter += 1
+            print(f"-------> idx: {current_idx} | item: {current_item}") 
+
+        shift_dist = int(np.floor(len(out_list) * .5))
+        out_list = out_list[shift_dist:] + out_list[:shift_dist]
+        seed_list.append(out_list)
+    
+    print(f"seed_list: {seed_list}")
+
+
+    # seed_list = input_seed_list.copy()
+    for list_idx, list in enumerate(seed_list):
+        for seed_idx, seed in enumerate(list):
+            print('Generating image for seed %d (%d/%d) path (%d/%d) ...' % (seed, seed_idx, len(list) - 1, list_idx, len(seed_list) - 1))
+            z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
+
+            # Construct an inverse rotation/translation matrix and pass to the generator.  The
+            # generator expects this matrix as an inverse to avoid potentially failing numerical
+            # operations in the network.
+            if hasattr(G.synthesis, 'input'):
+                m = make_transform(translate, rotate)
+                m = np.linalg.inv(m)
+                G.synthesis.input.transform.copy_(torch.from_numpy(m))
+
+            img = G(z, label, truncation_psi=truncation_psi, noise_mode=noise_mode)
+            img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}\path_{list_idx:02d}_{seed_idx:03d}_seed_{seed:04d}_t_{truncation_psi:0.2f}.png')
 
 
 #----------------------------------------------------------------------------
