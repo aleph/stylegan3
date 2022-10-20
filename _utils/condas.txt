@@ -3,6 +3,9 @@ conda activate stylegan3
 python visualizer.py
 
 
+Start cmd /c  C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
+
+
 C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
 
 python gen_images.py --outdir=_out\CLIPdataset\10 --trunc=1. --seeds=1000-1100 --network=models\network-snapshot-010990.pkl

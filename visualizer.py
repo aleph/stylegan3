@@ -391,7 +391,7 @@ dispatcher.map("/hand_data_projected*", hands_handler)
 
 # control functions
 def osc_setup(viz):
-    viz.osc_widget.param_0 = 0.03   #drag
+    viz.osc_widget.param_0 = 0.0225   #drag
     viz.osc_widget.param_1 = 0.85   #inertia
 
 
@@ -405,16 +405,20 @@ def osc_control(viz):
     # params
     target_speed = 0.05
     target_psi = -.7
+    target_latent_y = .25
 
-    speed_mult = 1.25
+    speed_mult = 1.5
     max_speed = 7.5
-    psi_mult = 5.
+    # psi_mult = 4.5
+    psi_mult = 15.
+    y_mult = .66
 
     drag = viz.osc_widget.param_0
     inertia = viz.osc_widget.param_1
 
     speed = float(viz.latent_widget.latent.speed)
     psi = -float(viz.trunc_noise_widget.trunc_psi)
+    latent_y = float(viz.latent_widget.latent.y)
 
 
     # update ui
@@ -423,7 +427,8 @@ def osc_control(viz):
         # values[0] = pow(min(hands_palm_vel[ch_indx][0], max_speed), 1.5)
         values[0] = min(hands_palm_vel[ch_indx][0], max_speed)
         values[1] = hands_palm_pos[ch_indx][0]
-        values[2] = hands_palm_norm[ch_indx][2]
+        # values[2] = hands_palm_pos[ch_indx][1]
+        values[2] = y_mult * (hands_palm_pos[ch_indx][1] + .5)
         values[3] = hands_palm_pos[ch_indx][2]
 
     
@@ -439,6 +444,16 @@ def osc_control(viz):
 
         speed = speed_mult * values[0] * (1 - inertia) + speed * inertia
         psi = psi_mult * values[3] * (1 - inertia) + psi * inertia
+        # latent_y = y_mult * (values[2] + 1.5)
+        # latent_y = y_mult * (values[2] + 1.5) * (1 - inertia) + latent_y * inertia
+        latent_y = values[2] * (1 - inertia) + latent_y * inertia
+
+    else:
+        latent_y = latent_y * (1 - drag) + target_latent_y * drag
+
+    # if latent_y > .5 and psi < 1.:
+    #     psi = psi * (1 - drag) + 1. * drag
+
 
     # else:
     target_speed_sign = 1.
@@ -447,9 +462,11 @@ def osc_control(viz):
 
     speed = speed * (1 - drag) + target_speed_sign * target_speed * drag
     psi = psi * (1 - drag) + target_psi * drag
+
     
     viz.latent_widget.latent.speed = speed
     viz.trunc_noise_widget.trunc_psi = -psi
+    viz.latent_widget.latent.y = latent_y
 
 
 
