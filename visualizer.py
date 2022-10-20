@@ -391,8 +391,12 @@ dispatcher.map("/hand_data_projected*", hands_handler)
 
 # control functions
 def osc_setup(viz):
-    viz.osc_widget.param_0 = 0.0225   #drag
-    viz.osc_widget.param_1 = 0.85   #inertia
+    viz.osc_widget.params.a = 0.0225    #drag
+    viz.osc_widget.params.b = 0.85      #inertia
+    viz.osc_widget.params.c = 1.5       #speed_mult
+    viz.osc_widget.params.d = 7.5       #max_speed
+    viz.osc_widget.params.e = 5.        #psi_mult
+    viz.osc_widget.params.f = .66       #y_mult
 
 
 def osc_control(viz):
@@ -407,14 +411,16 @@ def osc_control(viz):
     target_psi = -.7
     target_latent_y = .25
 
-    speed_mult = 1.5
-    max_speed = 7.5
-    # psi_mult = 4.5
-    psi_mult = 15.
-    y_mult = .66
-
-    drag = viz.osc_widget.param_0
-    inertia = viz.osc_widget.param_1
+    # speed_mult = 1.5
+    # max_speed = 7.5
+    # psi_mult = 5.
+    # y_mult = .66
+    drag = viz.osc_widget.params.a
+    inertia = viz.osc_widget.params.b
+    speed_mult = viz.osc_widget.params.c
+    max_speed = viz.osc_widget.params.d
+    psi_mult = viz.osc_widget.params.e
+    y_mult = viz.osc_widget.params.f
 
     speed = float(viz.latent_widget.latent.speed)
     psi = -float(viz.trunc_noise_widget.trunc_psi)
@@ -450,9 +456,6 @@ def osc_control(viz):
 
     else:
         latent_y = latent_y * (1 - drag) + target_latent_y * drag
-
-    # if latent_y > .5 and psi < 1.:
-    #     psi = psi * (1 - drag) + 1. * drag
 
 
     # else:

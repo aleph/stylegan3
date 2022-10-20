@@ -17,23 +17,22 @@ class OscWidget:
 
     
     def __init__(self, viz):
-        self.val_0 = 0.
-        self.val_1 = 0.
-        self.val_2 = 0.
-        self.val_3 = 0.
-        self.param_0 = 0.
-        self.param_1 = 0.
-        self.param_2 = 0.
-        self.param_3 = 0.
+        self.viz            = viz
         self.listen = True
 
-        self.viz            = viz
-        # self.xlate          = dnnlib.EasyDict(x=0, y=0, anim=False, round=False, speed=1e-2)
-        # self.xlate_def      = dnnlib.EasyDict(self.xlate)
-        # self.rotate         = dnnlib.EasyDict(val=0, anim=False, speed=5e-3)
-        # self.rotate_def     = dnnlib.EasyDict(self.rotate)
-        # self.opts           = dnnlib.EasyDict(untransform=False)
-        # self.opts_def       = dnnlib.EasyDict(self.opts)
+        self.values = dnnlib.EasyDict(a=0., b=0., c=0., d=0., e=0., f=0.)
+        self.params = dnnlib.EasyDict(a=0., b=0., c=0., d=0., e=0., f=0.)
+        self.values_def = dnnlib.EasyDict(self.values)
+        self.params_def = dnnlib.EasyDict(self.params)
+
+        # self.val_0 = 0.
+        # self.val_1 = 0.
+        # self.val_2 = 0.
+        # self.val_3 = 0.
+        # self.param_0 = 0.
+        # self.param_1 = 0.
+        # self.param_2 = 0.
+        # self.param_3 = 0.
 
 
     @imgui_utils.scoped_by_object_id
@@ -42,26 +41,34 @@ class OscWidget:
         
         if show:
             imgui.text('osc_values: ')          
-            with imgui_utils.item_width(viz.font_size * 8):
+            with imgui_utils.item_width(viz.font_size * 6):
                 imgui.same_line(viz.label_w * 1.5)
-                _changed, (self.val_0) = imgui.input_float('##values', self.val_0, format='%.3f')
+                _changed, (self.values.a) = imgui.input_float('##value_0', self.values.a, format='%.3f')
                 imgui.same_line()
-                _changed, (self.val_1) = imgui.input_float('##values', self.val_1, format='%.3f')
+                _changed, (self.values.b) = imgui.input_float('##value_1', self.values.b, format='%.3f')
                 imgui.same_line()
-                _changed, (self.val_2) = imgui.input_float('##values', self.val_2, format='%.3f')
+                _changed, (self.values.c) = imgui.input_float('##value_2', self.values.c, format='%.3f')
                 imgui.same_line()
-                _changed, (self.val_3) = imgui.input_float('##values', self.val_3, format='%.3f')
+                _changed, (self.values.d) = imgui.input_float('##value_3', self.values.d, format='%.3f')
+                imgui.same_line()
+                _changed, (self.values.e) = imgui.input_float('##value_4', self.values.e, format='%.3f')
+                imgui.same_line()
+                _changed, (self.values.f) = imgui.input_float('##value_5', self.values.f, format='%.3f')
            
             imgui.text('osc_params: ')          
-            with imgui_utils.item_width(viz.font_size * 8):                
+            with imgui_utils.item_width(viz.font_size * 6):                
                 imgui.same_line(viz.label_w * 1.5)
-                _changed, (self.param_0) = imgui.input_float('##values', self.param_0, format='%.3f')
+                _changed, self.params.a = imgui.input_float('##param_0', self.params.a, format='%.3f')
                 imgui.same_line()
-                _changed, (self.param_1) = imgui.input_float('##values', self.param_1, format='%.3f')
+                _changed, self.params.b = imgui.input_float('##param_1', self.params.b, format='%.3f')
                 imgui.same_line()
-                _changed, (self.param_2) = imgui.input_float('##values', self.param_2, format='%.3f')
+                _changed, self.params.c = imgui.input_float('##param_2', self.params.c, format='%.3f')
                 imgui.same_line()
-                _changed, (self.param_3) = imgui.input_float('##values', self.param_3, format='%.3f')
+                _changed, self.params.d = imgui.input_float('##param_3', self.params.d, format='%.3f')
+                imgui.same_line()
+                _changed, self.params.e = imgui.input_float('##param_4', self.params.e, format='%.3f')
+                imgui.same_line()
+                _changed, self.params.f = imgui.input_float('##param_5', self.params.f, format='%.3f')
                 # _changed, (self.val_0, self.val_1, self.val_2, self.val_3, self.val_4, self.val_5) = imgui.input_float('##values', self.val_0, self.val_1, self.val_2, self.val_3, self.val_4, self.val_5, format='%.3f')
 
         # if show:
