@@ -1,14 +1,33 @@
 cd tensor\stylegan3
 conda activate stylegan3
+
+python visualizer.py
+python visualizer_no_ui.py
+
+linux_docs/stylegan3
+conda activate stylegan3
 python visualizer.py
 
 
-Start cmd /c  C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
+Start cmd /c  C:\Users\fuse\tensor\stylegan3\_utils\startup_script.bat
 
 
-C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
+C:\Users\fuse\tensor\stylegan3\models\network-snapshot-010990.pkl
 
-python gen_images.py --outdir=_out\CLIPdataset\10 --trunc=1. --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
+C:\Users\fuse\tensor\stylegan3\_training-runs\00001-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000278.pkl
+
+python gen_video.py --output=_out\vids\lerp_psi_12.mp4 --trunc=1 --seeds=200-207 --grid=2x1 --w-frames 360  --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00001-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000278.pkl
+python gen_video.py --output=_out\vids\lerp_psi_5.mp4 --trunc=.5 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00001-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000278.pkl
+python gen_video.py --output=_out\vids\lerp_psi_1_m0_g8.mp4 --trunc=1 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00004-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma8\network-snapshot-000344.pkl
+python gen_video.py --output=_out\vids\lerp_psi_5_m0_g8.mp4 --trunc=.5 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00004-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma8\network-snapshot-000344.pkl
+python gen_video.py --output=_out\vids\lerp_psi_1_m0_g18.mp4 --trunc=1 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00007-stylegan3-t-illustrazioni-0-1024x1024-gpus1-batch32-gamma18\network-snapshot-000152.pkl
+python gen_video.py --output=_out\vids\lerp_psi_5_m0_g18.mp4 --trunc=.5 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00007-stylegan3-t-illustrazioni-0-1024x1024-gpus1-batch32-gamma18\network-snapshot-000152.pkl
+python gen_video.py --output=_out\vids\lerp_psi_1_mb.mp4 --trunc=1 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00008-stylegan2-illustrazioni-b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000224.pkl
+python gen_video.py --output=_out\vids\lerp_psi_5_mb.mp4 --trunc=.5 --seeds=200-207 --grid=2x1  --w-frames 360 --network=C:\Users\fuse\tensor\stylegan3\_training-runs\00008-stylegan2-illustrazioni-b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000224.pkl
+
+
+
+python gen_images.py --outdir=_out --trunc=.8 --seeds=1000-1100 --network=models/network-snapshot-010990.pkl
 python gen_images.py --outdir=_out\CLIPdataset\08 --trunc=.8 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
 python gen_images.py --outdir=_out\CLIPdataset\06 --trunc=.6 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
 python gen_images.py --outdir=_out\CLIPdataset\04 --trunc=.4 --seeds=1000-1100 --network=models\network-snapshot-010990.pkl
