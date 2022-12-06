@@ -191,7 +191,7 @@ class Visualizer(imgui_window.ImguiWindow):
                     self._tex_obj.update(self._tex_img)
             zoom = min(max_w / self._tex_obj.width, max_h / self._tex_obj.height)
             zoom = np.floor(zoom) if zoom >= 1 else zoom
-            self._tex_obj.draw(pos=pos, zoom=zoom*.95, align=0.5, rint=True)
+            self._tex_obj.draw(pos=pos, zoom=zoom, align=0.5, rint=True)
         if 'error' in self.result:
             self.print_error(self.result.error)
             if 'message' not in self.result:
@@ -316,8 +316,8 @@ hands_palm_pos_stab = [[0., 0., 0.], [0., 0., 0.]]
 
 
 # osc sender setup
-# ip_send = "127.0.0.1"
-ip_send = "192.168.1.122"
+ip_send = "127.0.0.1"
+# ip_send = "192.168.1.122"
 port_send = 7400
 
 client = SimpleUDPClient(ip_send, port_send)  # Create client
@@ -424,10 +424,10 @@ def osc_setup(viz):
 
 def osc_control(viz):
     ch_indx = -1
-    if hands_vec[0] == True:
-        ch_indx = 0
-    elif hands_vec[1] == True:
+    if hands_vec[1] == True:
         ch_indx = 1
+    elif hands_vec[0] == True:
+        ch_indx = 0
 
     # params
     target_speed = 0.05
@@ -466,6 +466,8 @@ def osc_control(viz):
     viz.osc_widget.val_2 = values[2]
     viz.osc_widget.val_3 = values[3]
 
+    pseudo_psi = min(-psi * .5, .99)
+
     # update gan
     if (ch_indx >= 0):
         viz.latent_widget.latent.anim = True
@@ -475,10 +477,11 @@ def osc_control(viz):
         # latent_y = y_mult * (values[2] + 1.5)
         # latent_y = y_mult * (values[2] + 1.5) * (1 - inertia) + latent_y * inertia
         latent_y = values[2] * (1 - inertia) + latent_y * inertia
+        pseudo_psi = pseudo_psi + random.randrange(-1., 1) * .001  ##NO_GUI
 
     else:
         latent_y = latent_y * (1 - drag) + target_latent_y * drag
-        psi += random.randrange(-1., 1) * .002  ##NO_GUI
+        # psi += random.randrange(-1., 1) * .002  ##NO_GUI
 
 
     # else:
@@ -501,8 +504,10 @@ def osc_control(viz):
     # client.send_message("/interaction/latent_y", values[2])
 
     # client.send_message("/interaction/speed", (speed + 5.) * .1 )   # Send float message
-    client.send_message("/interaction/speed", min(abs(speed), 5.) * .2 + (-psi * .1))   # Send float message
-    client.send_message("/interaction/psi", min(-psi * .5, .99))
+    client.send_message("/interaction/speed", min(abs(speed), 5.) * .2 + (-psi * .05))   # Send float message
+    
+    
+    client.send_message("/interaction/psi", pseudo_psi)
     client.send_message("/interaction/latent_y", latent_y)
 
 
