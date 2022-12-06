@@ -3,13 +3,13 @@
 echo Tracking Service
 start "Tracking Service" "C:\Program Files\Ultraleap\TrackingService\bin\LeapSvc.exe"
 
+timeout 10 > NUL
 echo Tracking Control Panel
 start "Control Panel" "C:\Program Files\Ultraleap\TrackingControlPanel\bin\TrackingControlPanel.exe"
 
-timeout 10 > NUL
 echo Leap Motion
 start "Leap Motion" "C:\Users\aless\Unity\LMT_Headless_3\Leap_Motion_Test.exe"
-@REM start "Leap Motion" "C:\Users\fuse\Unity\LMT_Build\Leap Motion Test.exe"
+@REM start "Leap Motion" "C:\Users\aless\Unity\LMT_Build_3\Leap_Motion_Test.exe"
 
 
 @REM echo Open Frameworks

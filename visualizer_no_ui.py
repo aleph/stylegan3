@@ -35,6 +35,8 @@ from pythonosc.udp_client import SimpleUDPClient
 import asyncio
 from typing import List, Any
 import datetime
+import csv
+import random
 
 #----------------------------------------------------------------------------
 
@@ -142,7 +144,7 @@ class Visualizer(imgui_window.ImguiWindow):
         imgui.set_next_window_position(0, 0)
         # imgui.set_next_window_size(self.pane_w, self.content_height)
         imgui.set_next_window_size(self.pane_w, self.button_w * 2)
-        # imgui.set_next_window_position(self.window_width, self.window_height) ##NO_GUI
+        imgui.set_next_window_position(self.window_width, self.window_height) ##NO_GUI
         # imgui.set_next_window_size(1., 1.)
         imgui.begin('##control_pane', closable=True, flags=(imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE))
 
@@ -174,11 +176,7 @@ class Visualizer(imgui_window.ImguiWindow):
             if result is not None:
                 self.result = result
 
-        #NO UI
-        # # Display.
-        # max_w = self.content_width - self.pane_w
-        # max_h = self.content_height
-        # pos = np.array([self.pane_w + max_w / 2, max_h / 2])
+
 
         max_w = self.content_width
         max_h = self.content_height
@@ -193,7 +191,7 @@ class Visualizer(imgui_window.ImguiWindow):
                     self._tex_obj.update(self._tex_img)
             zoom = min(max_w / self._tex_obj.width, max_h / self._tex_obj.height)
             zoom = np.floor(zoom) if zoom >= 1 else zoom
-            self._tex_obj.draw(pos=pos, zoom=zoom, align=0.5, rint=True)
+            self._tex_obj.draw(pos=pos, zoom=zoom*.95, align=0.5, rint=True)
         if 'error' in self.result:
             self.print_error(self.result.error)
             if 'message' not in self.result:
@@ -317,11 +315,12 @@ hands_palm_dir = [[0., 0., 0.], [0., 0., 0.]]
 hands_palm_pos_stab = [[0., 0., 0.], [0., 0., 0.]]
 
 
-# # osc sender setup
+# osc sender setup
 # ip_send = "127.0.0.1"
-# port_send = 7000
+ip_send = "192.168.1.122"
+port_send = 7400
 
-# client = SimpleUDPClient(ip_send, port_send)  # Create client
+client = SimpleUDPClient(ip_send, port_send)  # Create client
 
 
 
@@ -415,7 +414,7 @@ dispatcher.map("/hand_data_projected*", hands_handler)
 
 # control functions
 def osc_setup(viz):
-    viz.osc_widget.params.a = 0.0225    #drag
+    viz.osc_widget.params.a = 0.025    #drag
     viz.osc_widget.params.b = 0.85      #inertia
     viz.osc_widget.params.c = 1.5       #speed_mult
     viz.osc_widget.params.d = 7.5       #max_speed
@@ -467,12 +466,6 @@ def osc_control(viz):
     viz.osc_widget.val_2 = values[2]
     viz.osc_widget.val_3 = values[3]
 
-    # # send osc values
-    # client.send_message("/interaction/speed", values[0])   # Send float message
-    # client.send_message("/interaction/psi", values[3])
-    # client.send_message("/interaction/latent_y", values[2])
-
-
     # update gan
     if (ch_indx >= 0):
         viz.latent_widget.latent.anim = True
@@ -485,6 +478,7 @@ def osc_control(viz):
 
     else:
         latent_y = latent_y * (1 - drag) + target_latent_y * drag
+        psi += random.randrange(-1., 1) * .002  ##NO_GUI
 
 
     # else:
@@ -501,6 +495,26 @@ def osc_control(viz):
     viz.latent_widget.latent.y = latent_y
 
 
+    # send osc values
+    # client.send_message("/interaction/speed", values[0])   # Send float message
+    # client.send_message("/interaction/psi", values[3])
+    # client.send_message("/interaction/latent_y", values[2])
+
+    # client.send_message("/interaction/speed", (speed + 5.) * .1 )   # Send float message
+    client.send_message("/interaction/speed", min(abs(speed), 5.) * .2 + (-psi * .1))   # Send float message
+    client.send_message("/interaction/psi", min(-psi * .5, .99))
+    client.send_message("/interaction/latent_y", latent_y)
+
+
+    # data rows of csv file 
+    # row = [values[0], values[3], values[2]]     ##NO_GUI
+    
+    # with open('osc_fake_data.csv', 'a', newline='') as f:
+        
+    #     # using csv.writer method from CSV package
+    #     write = csv.writer(f)
+        
+    #     write.writerow(row)
 
 
 
@@ -527,7 +541,7 @@ async def main(
     browse_dir = None
     capture_dir = "./out"
     pkls = []
-    # pkls = ["C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl"]    ##NO_GUI
+    pkls = ["C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl"]    ##NO_GUI
     
     """Interactive model visualizer.
 
@@ -547,7 +561,7 @@ async def main(
         viz.load_pickle(pkls[0])
     else:
         pretrained = [
-            # "C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl",
+            "C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl",
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhqu-1024x1024.pkl',
