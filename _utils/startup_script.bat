@@ -8,8 +8,8 @@ start "Control Panel" "C:\Program Files\Ultraleap\TrackingControlPanel\bin\Track
 
 timeout 10 > NUL
 echo Leap Motion
-@REM start "Leap Motion" "C:\Unity\LMT_Headless\Leap_Motion_Test.exe"
-start "Leap Motion" "C:\Users\fuse\Unity\LMT_Build_2\Leap Motion Test.exe"
+start "Leap Motion" "C:\Users\aless\Unity\LMT_Headless_3\Leap_Motion_Test.exe"
+@REM start "Leap Motion" "C:\Users\fuse\Unity\LMT_Build\Leap Motion Test.exe"
 
 
 @REM echo Open Frameworks

@@ -128,11 +128,11 @@ class Visualizer(imgui_window.ImguiWindow):
         self.begin_frame()
         self.args = dnnlib.EasyDict()
         # self.pane_w = self.font_size * 45
-        self.pane_w = self.font_size * 36
+        self.pane_w = self.font_size * 45
         self.button_w = self.font_size * 5
         self.label_w = round(self.font_size * 4.5)
 
-        #NO UI
+
         # Detect mouse dragging in the result area.
         dragging, dx, dy = imgui_utils.drag_hidden_window('##result_area', x=self.pane_w, y=0, width=self.content_width-self.pane_w, height=self.content_height)
         if dragging:
@@ -317,11 +317,11 @@ hands_palm_dir = [[0., 0., 0.], [0., 0., 0.]]
 hands_palm_pos_stab = [[0., 0., 0.], [0., 0., 0.]]
 
 
-# osc sender setup
-ip_send = "127.0.0.1"
-port_send = 7000
+# # osc sender setup
+# ip_send = "127.0.0.1"
+# port_send = 7000
 
-client = SimpleUDPClient(ip_send, port_send)  # Create client
+# client = SimpleUDPClient(ip_send, port_send)  # Create client
 
 
 
@@ -345,7 +345,7 @@ def global_handler(address: str, *args: List[Any]) -> None:
 
     
     count_size[0] += 1
-    if count_size[0] % 3000 == 0:
+    if count_size[0] % 5000 == 0:
         current_time = datetime.datetime.now()
         print(f"Setting global values: {hands_vec[0]}, {hands_vec[1]}. Screen sizes: {screen_size[0]}, {screen_size[1]} ---> {count_size[0]} / {current_time}")
 
@@ -467,10 +467,10 @@ def osc_control(viz):
     viz.osc_widget.val_2 = values[2]
     viz.osc_widget.val_3 = values[3]
 
-    # send osc values
-    client.send_message("/interaction/speed", values[0])   # Send float message
-    client.send_message("/interaction/psi", values[3])
-    client.send_message("/interaction/latent_y", values[2])
+    # # send osc values
+    # client.send_message("/interaction/speed", values[0])   # Send float message
+    # client.send_message("/interaction/psi", values[3])
+    # client.send_message("/interaction/latent_y", values[2])
 
 
     # update gan
@@ -527,7 +527,6 @@ async def main(
     browse_dir = None
     capture_dir = "./out"
     pkls = []
-    # pkls = ["https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl"]
     # pkls = ["C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl"]    ##NO_GUI
     
     """Interactive model visualizer.
@@ -548,6 +547,7 @@ async def main(
         viz.load_pickle(pkls[0])
     else:
         pretrained = [
+            # "C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl",
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhqu-1024x1024.pkl',

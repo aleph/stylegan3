@@ -1,8 +1,8 @@
 cd tensor\stylegan3
 conda activate stylegan3
 
-python visualizer.py
 python visualizer_no_ui.py
+python visualizer.py
 
 linux_docs/stylegan3
 conda activate stylegan3
@@ -12,7 +12,8 @@ python visualizer.py
 Start cmd /c  C:\Users\fuse\tensor\stylegan3\_utils\startup_script.bat
 
 
-C:\Users\fuse\tensor\stylegan3\models\network-snapshot-010990.pkl
+C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
+https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan2/versions/1/files/stylegan2-afhqcat-512x512.pkl
 
 C:\Users\fuse\tensor\stylegan3\_training-runs\00001-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000278.pkl
 
