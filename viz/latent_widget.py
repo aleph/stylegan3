@@ -62,7 +62,7 @@ class LatentWidget:
             # snapped = dnnlib.EasyDict(self.latent, x=round(self.latent.x), y=round(self.latent.y))
             # if imgui_utils.button('Snap', width=viz.button_w, enabled=(self.latent != snapped)):
             #     self.latent = snapped
-            _clicked, self.latent.classes = imgui.checkbox('Class', self.latent.classes)
+            _clicked, self.latent.classes = imgui.checkbox('Classes', self.latent.classes)
             imgui.same_line()
             if imgui_utils.button('Reset', width=-1, enabled=(self.latent != self.latent_def)):
                 self.latent = dnnlib.EasyDict(self.latent_def)

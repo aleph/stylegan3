@@ -31,6 +31,7 @@ from viz import osc_widget
 
 from pythonosc.osc_server import AsyncIOOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
+from pythonosc.udp_client import SimpleUDPClient
 import asyncio
 from typing import List, Any
 import datetime
@@ -39,7 +40,7 @@ import datetime
 
 class Visualizer(imgui_window.ImguiWindow):
     def __init__(self, capture_dir=None):
-        super().__init__(title='GAN Visualizer', window_width=3840, window_height=2160)
+        super().__init__(title='GAN Visualizer', window_width=3840, window_height=2160, window_monitor=True)
 
         # Internals.
         self._last_error_print  = None
@@ -77,10 +78,11 @@ class Visualizer(imgui_window.ImguiWindow):
 
         # Initialize window.
         io = imgui.get_io()
-        # self.set_window_size(3860., 2860.)
-        self.set_window_size(2860., 3960.)
+        self.set_window_size(3860., 2860.)  ##NO_GUI
+        # self.set_window_size(2860., 3960.)
+        
 
-        self.set_position(0, -48)
+        self.set_position(0, 0)
         self._adjust_font_size()
         self.skip_frame() # Layout may change after first frame.
 
@@ -139,8 +141,10 @@ class Visualizer(imgui_window.ImguiWindow):
         # Begin control pane.
         imgui.set_next_window_position(0, 0)
         # imgui.set_next_window_size(self.pane_w, self.content_height)
-        imgui.set_next_window_size(self.pane_w, self.button_w)
-        imgui.begin('##control_pane', closable=False, flags=(imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE))
+        imgui.set_next_window_size(self.pane_w, self.button_w * 2)
+        # imgui.set_next_window_position(self.window_width, self.window_height) ##NO_GUI
+        # imgui.set_next_window_size(1., 1.)
+        imgui.begin('##control_pane', closable=True, flags=(imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE))
 
         # Widgets.
         expanded, _visible = imgui_utils.collapsing_header('Network & latent', default=True)
@@ -295,7 +299,7 @@ class AsyncRenderer:
 
 #----------------------------------------------------------------------------
 
-# osc setup
+# osc server setup
 count_size = [0, 0]
 
 ip = "127.0.0.1"
@@ -311,6 +315,13 @@ hands_palm_vel = [[0., 0., 0.], [0., 0., 0.]]
 hands_palm_norm = [[0., 0., 0.], [0., 0., 0.]]
 hands_palm_dir = [[0., 0., 0.], [0., 0., 0.]]
 hands_palm_pos_stab = [[0., 0., 0.], [0., 0., 0.]]
+
+
+# osc sender setup
+ip_send = "127.0.0.1"
+port_send = 7000
+
+client = SimpleUDPClient(ip_send, port_send)  # Create client
 
 
 
@@ -456,6 +467,11 @@ def osc_control(viz):
     viz.osc_widget.val_2 = values[2]
     viz.osc_widget.val_3 = values[3]
 
+    # send osc values
+    client.send_message("/interaction/speed", values[0])   # Send float message
+    client.send_message("/interaction/psi", values[3])
+    client.send_message("/interaction/latent_y", values[2])
+
 
     # update gan
     if (ch_indx >= 0):
@@ -486,6 +502,8 @@ def osc_control(viz):
 
 
 
+
+
 async def loop(viz):
     while not viz.should_close():
         osc_control(viz)
@@ -510,13 +528,15 @@ async def main(
     capture_dir = "./out"
     pkls = []
     # pkls = ["https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl"]
-    # pkls = ["C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl"]
+    # pkls = ["C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl"]    ##NO_GUI
+    
     """Interactive model visualizer.
 
     Optional PATH argument can be used specify which .pkl file to load.
     """
     viz = Visualizer(capture_dir=capture_dir)
     osc_setup(viz)
+    viz.latent_widget.latent.classes = False     ##NO_GUI
 
     if browse_dir is not None:
         viz.pickle_widget.search_dirs = [browse_dir]

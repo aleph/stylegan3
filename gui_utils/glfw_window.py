@@ -14,7 +14,7 @@ from . import gl_utils
 #----------------------------------------------------------------------------
 
 class GlfwWindow: # pylint: disable=too-many-public-methods
-    def __init__(self, *, title='GlfwWindow', window_width=1920, window_height=1080, deferred_show=True, close_on_esc=True):
+    def __init__(self, *, title='GlfwWindow', window_width=1920, window_height=1080, deferred_show=True, close_on_esc=True, window_monitor=False):
         self._glfw_window           = None
         self._drawing_frame         = False
         self._frame_start_time      = None
@@ -29,10 +29,17 @@ class GlfwWindow: # pylint: disable=too-many-public-methods
         self._capture_next_frame    = False
         self._captured_frame        = None
 
+        self._window_monitor        = None
+
         # Create window.
         glfw.init()
         glfw.window_hint(glfw.VISIBLE, False)
-        self._glfw_window = glfw.create_window(width=window_width, height=window_height, title=title, monitor=None, share=None)
+
+        if (window_monitor):
+            self._window_monitor    = glfw.get_primary_monitor()
+        
+        self._glfw_window = glfw.create_window(width=window_width, height=window_height, title=title, monitor=self._window_monitor, share=None)
+        # self._glfw_window = glfw.create_window(width=window_width, height=window_height, title=title, monitor=None, share=None)
         self._attach_glfw_callbacks()
         self.make_context_current()
 
