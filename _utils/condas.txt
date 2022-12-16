@@ -7,8 +7,52 @@ C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
 
 C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
 
+python ada_src/model_convert.py -r --source "C:\Users\aless\tensor\stylegan3\models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728.pkl" --out_dir "./models"
 
 
+"C:\Users\aless\tensor\stylegan3\models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312.pkl"
+"C:\Users\aless\tensor\stylegan3\models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728.pkl"
+"C:\Users\aless\tensor\stylegan3\models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544.pkl"
+
+
+#@title ### Custom size generation
+
+cubic_smooth = '--cubic ' if cubic_smooth else ''
+gauss_smooth = '--gauss ' if gauss_smooth else ''
+smooth = cubic_smooth + gauss_smooth
+
+save_lat = '--save_lat ' if save_lat else ''
+
+sizeX = 1080 #@param {type:"integer"} 
+sizeY = 3840 #@param {type:"integer"}
+size = '%d-%d' % (sizeX, sizeY)
+scaling = 'symm' #@param ['pad', 'padside', 'symm', 'symmside']
+
+
+python ada_src/_genSGAN2.py --model "models\network-snapshot-010990-Gs.pkl" --out_dir "_out\out_SGAN2\010990-Gs" --frames "200-40" --size "1024-2048" --scale_type 'symm' --cubic --seed 42 --verbose --save_lat
+-n "1-2" --splitfine 0.
+--latmask '_in/Untitled-2.png'
+
+
+python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-60_2" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose
+
+
+
+python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-60_gauss_2" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --gauss --seed 0 --verbose && python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-mask-60_2" --frames "240-60" --size "1080-3640" --latmask "_in/Untitled-2.png" --cubic --seed 0 --verbose && python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-mask-60_gauss_2" --frames "240-60" --size "1080-3640" --latmask "_in/Untitled-2.png" --cubic --gauss --seed 0 --verbose
+
+python ada_src/_genSGAN2.py --model "models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728-Gs.pkl" --out_dir "_out\out_SGAN2\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\double-mask-60" --frames "240-60" --size "1080-3640" --latmask "_in/Untitled-2.png" --cubic --seed 0 --verbose
+
+python ada_src/_genSGAN2.py --model "models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544-Gs.pkl" --out_dir "_out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose && python ada_src/_genSGAN2.py --model "models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544-Gs.pkl" --out_dir "_out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --gauss --seed 0 --verbose
+
+
+-framerate 30
+ffmpeg -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\double-symm-60\%06d.jpg _out\out_SGAN2\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\double-mask-60.mp4
+
+ffmpeg -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60\%06d.jpg  _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60.mp4 && ffmpeg -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss\%06d.jpg _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss.mp4
+ffmpeg -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\single-symm-60.mp4 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60.mp4  -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss.mp4 -filter_complex "hstack=inputs=3,format=yuv420p" -c:v libx264 -crf 18 _out\out_SGAN2\multiple-piante-60_compare.mp4
+
+
+-------------------------------------------
 python visualizer.py
 
 linux_docs/stylegan3
