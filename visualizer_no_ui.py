@@ -42,7 +42,9 @@ import random
 
 class Visualizer(imgui_window.ImguiWindow):
     def __init__(self, capture_dir=None):
-        super().__init__(title='GAN Visualizer', window_width=3840, window_height=2160, window_monitor=True)
+        # super().__init__(title='GAN Visualizer', window_width=3840, window_height=2160, window_monitor=True)
+        super().__init__(title='GAN Visualizer', window_width=2160, window_height=3840, window_monitor=True)
+        # super().__init__(title='GAN Visualizer', window_width=3840, window_height=2160)
 
         # Internals.
         self._last_error_print  = None
@@ -80,8 +82,8 @@ class Visualizer(imgui_window.ImguiWindow):
 
         # Initialize window.
         io = imgui.get_io()
-        self.set_window_size(3860., 2860.)  ##NO_GUI
-        # self.set_window_size(2860., 3960.)
+        # self.set_window_size(3860., 2860.)  ##NO_GUI
+        self.set_window_size(2860., 3960.)
         
 
         self.set_position(0, 0)
@@ -143,7 +145,8 @@ class Visualizer(imgui_window.ImguiWindow):
         # Begin control pane.
         imgui.set_next_window_position(0, 0)
         # imgui.set_next_window_size(self.pane_w, self.content_height)
-        imgui.set_next_window_size(self.pane_w, self.button_w * 2)
+        # imgui.set_next_window_size(self.pane_w, self.button_w * 2)
+        # imgui.set_next_window_size(self.pane_w, self.content_height)
         imgui.set_next_window_position(self.window_width, self.window_height) ##NO_GUI
         # imgui.set_next_window_size(1., 1.)
         imgui.begin('##control_pane', closable=True, flags=(imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE))

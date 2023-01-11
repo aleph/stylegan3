@@ -12,6 +12,10 @@ start "Leap Motion" "C:\Users\aless\Unity\LMT_Headless_3\Leap_Motion_Test.exe"
 @REM start "Leap Motion" "C:\Users\aless\Unity\LMT_Build_3\Leap_Motion_Test.exe"
 
 
+echo MAX
+start "Max" "C:\Users\aless\Documents\__Fuse\AB .Interactive\AB_Medulla_MaxMSP\AB.maxpat"
+
+
 @REM echo Open Frameworks
 @REM start "Iris Gallery" "C:\Users\iris\workspace\of_v0.11.2_vs2017_release\apps\_fuse\Iris_screens\bin\Iris_screens.exe"
 @REM @REM start "Iris Gallery" "C:\Users\Iris_2\Desktop\Iris_screens\bin\Iris_screens.exe"

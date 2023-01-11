@@ -17,10 +17,16 @@ from gui_utils import imgui_utils
 class LatentWidget:
     def __init__(self, viz):
         self.viz        = viz
-        self.latent     = dnnlib.EasyDict(x=0, y=0, anim=False, speed=0.25, classes=False)
+        self.latent     = dnnlib.EasyDict(x=0, y=0, anim=False, speed=0.25, classes=False, use_list=False)
         self.latent_def = dnnlib.EasyDict(self.latent)
         self.step_y     = 100
-        self.counter     = 0
+        self.counter    = 0
+        self.seeds      = []
+        self.populate_seeds()
+
+    def populate_seeds(self):
+        self.seeds =    [[1003, 1016, 1005, 1015, 1020, 1038, 1023, 1022, 1001, 1031, 1017, 1009, 1007], 
+                        [255, 329, 556, 1066, 220, 951, 1010, 1006, 275, 300, 1061, 1044, 1063]]
 
     def drag(self, dx, dy):
         viz = self.viz
@@ -63,6 +69,7 @@ class LatentWidget:
             # if imgui_utils.button('Snap', width=viz.button_w, enabled=(self.latent != snapped)):
             #     self.latent = snapped
             _clicked, self.latent.classes = imgui.checkbox('Classes', self.latent.classes)
+            _clicked, self.latent.use_list = imgui.checkbox('List', self.latent.use_list)
             imgui.same_line()
             if imgui_utils.button('Reset', width=-1, enabled=(self.latent != self.latent_def)):
                 self.latent = dnnlib.EasyDict(self.latent_def)
@@ -73,9 +80,7 @@ class LatentWidget:
 
 
         if self.latent.classes:
-            seed_list = [
-            [1003, 1016, 1005, 1015, 1020, 1038, 1023, 1022, 1001, 1031, 1017, 1009, 1007], 
-            [255, 329, 556, 1066, 220, 951, 1010, 1006, 275, 300, 1061, 1044, 1063]]
+            seed_list = self.seeds
             
             seed_plane = 0
             if self.latent.y > .66:
@@ -106,6 +111,33 @@ class LatentWidget:
             # print(f"self.latent.x: {self.latent.x} | last_val: {last_val} | next_val: {next_val} | [{seed_list[seed_plane][last_item]}, {frac_val}], [{seed_list[seed_plane][next_item]}, {(1. - frac_val)}]")
             # print(f"self.latent.x: {self.latent.y} | seed_plane: {seed_plane} | next_plane: {next_plane} | [{seed_list[next_plane][last_item]}, {frac_h}], [{seed_list[next_plane][next_item]}, {(1 - frac_h)}]")
             # print(f"-------------")
+
+
+        elif self.latent.use_list:
+            seed_list = self.seeds
+            
+            seed_plane = 0
+
+            next_plane = min(seed_plane + 1, 1)
+
+            frac_h = 1.
+            if self.latent.y > .33 and self.latent.y < .66:
+                frac_h = 1. - ((self.latent.y - .33) * 3.)
+
+
+            last_val = np.floor(self.latent.x)
+            frac_val = 1 - abs(self.latent.x - np.trunc(self.latent.x))
+            if self.latent.x < 0.:
+                frac_val = 1 - frac_val
+            next_val = np.ceil(self.latent.x)
+
+            last_item = int(last_val)%len(seed_list[seed_plane])
+            next_item = int(next_val)%len(seed_list[seed_plane])
+
+            viz.args.w0_seeds = [[seed_list[seed_plane][last_item], frac_val * frac_h], [seed_list[seed_plane][next_item], (1. - frac_val) * frac_h]] # [[seed, weight], ...]
+            viz.args.w0_seeds.append([seed_list[next_plane][last_item], frac_val * (1 - frac_h)]) # [[seed, weight], ...]
+            viz.args.w0_seeds.append([seed_list[next_plane][next_item], (1. - frac_val) * (1 - frac_h)]) # [[seed, weight], ...]
+
 
         else:
             viz.args.w0_seeds = [] # [[seed, weight], ...]

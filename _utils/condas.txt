@@ -2,12 +2,16 @@ cd tensor\stylegan3
 conda activate stylegan3
 
 python visualizer_no_ui.py
+python visualizer_manual.py
 
 C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
 
 C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
 
+C:\Users\aless\tensor\stylegan3\models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896.pkl
+
 python ada_src/model_convert.py -r --source "C:\Users\aless\tensor\stylegan3\models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728.pkl" --out_dir "./models"
+
 
 
 "C:\Users\aless\tensor\stylegan3\models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312.pkl"
@@ -39,10 +43,30 @@ python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-102
 
 
 python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-60_gauss_2" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --gauss --seed 0 --verbose && python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-mask-60_2" --frames "240-60" --size "1080-3640" --latmask "_in/Untitled-2.png" --cubic --seed 0 --verbose && python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-mask-60_gauss_2" --frames "240-60" --size "1080-3640" --latmask "_in/Untitled-2.png" --cubic --gauss --seed 0 --verbose
-
 python ada_src/_genSGAN2.py --model "models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728-Gs.pkl" --out_dir "_out\out_SGAN2\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\double-mask-60" --frames "240-60" --size "1080-3640" --latmask "_in/Untitled-2.png" --cubic --seed 0 --verbose
 
-python ada_src/_genSGAN2.py --model "models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544-Gs.pkl" --out_dir "_out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose && python ada_src/_genSGAN2.py --model "models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544-Gs.pkl" --out_dir "_out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss" --frames "240-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --gauss --seed 0 --verbose
+python ada_src/_genSGAN2.py --model "models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544-Gs.pkl" --out_dir "_out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-gauss-60" --frames "900-60" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --gauss --seed 0 --verbose 
+
+
+
+
+##PROCESSING
+
+
+
+
+##Erbario secco
+python ada_src/_genSGAN2.py --model "models\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\network-snapshot-000544-Gs.pkl" --out_dir "_out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\single-symm-80" --frames "900-90" --size "1080-3640" --scale_type 'symm' --cubic --seed 0 --verbose
+##illustrazioni
+python ada_src/_genSGAN2.py --model "models\00004-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma8\network-snapshot-000344-Gs.pkl" --out_dir "_out\out_SGAN2\00004-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma8\double-symm-90" --frames "180-90" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose
+python ada_src/_genSGAN2.py --model "models\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\network-snapshot-000312-Gs.pkl" --out_dir "_out\out_SGAN2\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-90" --frames "900-90" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose
+##incisioni
+python ada_src/_genSGAN2.py --model "models\00012-stylegan2-incisioni-f-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000264-Gs.pkl" --out_dir "_out\out_SGAN2\00012-stylegan2-incisioni-f-1024x1024-gpus1-batch32-gamma6.6\double-symm-90" --frames "180-90" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose
+##mix
+python ada_src/_genSGAN2.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\double-symm-90" --frames "180-90" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose
+
+
+-------------------------------------------
 
 
 -framerate 30
@@ -50,6 +74,29 @@ ffmpeg -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00016-stylegan2-in
 
 ffmpeg -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60\%06d.jpg  _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60.mp4 && ffmpeg -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss\%06d.jpg _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss.mp4
 ffmpeg -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\single-symm-60.mp4 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60.mp4  -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-60_gauss.mp4 -filter_complex "hstack=inputs=3,format=yuv420p" -c:v libx264 -crf 18 _out\out_SGAN2\multiple-piante-60_compare.mp4
+
+
+
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-gauss-60\%06d.jpg _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\double-symm-gauss-60.mp4
+
+
+
+##PROCESSING
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00004-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma8\double-symm-90\%06d.jpg _out\out_SGAN2\illustrazioni-0_double-symm-90.mp4 &  ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00012-stylegan2-incisioni-f-1024x1024-gpus1-batch32-gamma6.6\double-symm-90\%06d.jpg _out\out_SGAN2\incisioni-f_double-symm-90.mp4 & ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\double-symm-90\%06d.jpg _out\out_SGAN2\incisioni-h3_m_double-symm-90.mp4
+
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 512 -i _out\out_SGAN2\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-90\%06d.jpg _out\out_SGAN2\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-90.mp4
+
+
+
+##Erbario secco
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00017-stylegan2-piante-l-1024x1024-gpus1-batch32-gamma8\single-symm-80\%06d.jpg _out\out_SGAN2\piante-l_single-symm-90_2.mp4
+##illustrazioni
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00004-stylegan2-illustrazioni-0-1024x1024-gpus1-batch32-gamma8\double-symm-90\%06d.jpg _out\out_SGAN2\illustrazioni-0_double-symm-90.mp4
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00015-stylegan2-illustrazioni-h2-1024x1024-gpus1-batch32-gamma7.2\double-symm-90\%06d.jpg _out\out_SGAN2\illustrazioni-h2_double-symm-90.mp4
+##incisioni
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00012-stylegan2-incisioni-f-1024x1024-gpus1-batch32-gamma6.6\double-symm-90\%06d.jpg _out\out_SGAN2\incisioni-f_double-symm-90.mp4
+##mix
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 1024 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\double-symm-90\%06d.jpg _out\out_SGAN2\incisioni-h3_m_double-symm-90.mp4
 
 
 -------------------------------------------

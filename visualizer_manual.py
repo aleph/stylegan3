@@ -26,6 +26,11 @@ from viz import performance_widget
 from viz import capture_widget
 from viz import layer_widget
 from viz import equivariance_widget
+from viz import osc_widget
+
+import pandas as pd
+from pythonosc.udp_client import SimpleUDPClient
+
 
 #----------------------------------------------------------------------------
 
@@ -56,6 +61,7 @@ class Visualizer(imgui_window.ImguiWindow):
         self.capture_widget     = capture_widget.CaptureWidget(self)
         self.layer_widget       = layer_widget.LayerWidget(self)
         self.eq_widget          = equivariance_widget.EquivarianceWidget(self)
+        self.osc_widget         = osc_widget.OscWidget(self)
 
         if capture_dir is not None:
             self.capture_widget.path = capture_dir
@@ -64,6 +70,13 @@ class Visualizer(imgui_window.ImguiWindow):
         self.set_position(0, 0)
         self._adjust_font_size()
         self.skip_frame() # Layout may change after first frame.
+
+
+        # Import data
+        self.data = None
+        self.counter = 0
+        self.client = None
+
 
     def close(self):
         super().close()
@@ -134,6 +147,7 @@ class Visualizer(imgui_window.ImguiWindow):
         with imgui_utils.grayed_out(not self.result.get('has_input_transform', False)):
             expanded, _visible = imgui_utils.collapsing_header('Equivariance', default=True)
             self.eq_widget(expanded)
+        self.osc_widget(expanded)
 
         # Render.
         if self.is_skipping_frames():
@@ -172,6 +186,138 @@ class Visualizer(imgui_window.ImguiWindow):
         self._adjust_font_size()
         imgui.end()
         self.end_frame()
+
+        self.counter += 1
+
+#----------------------------------------------------------------------------
+
+    # control functions
+    def interpolate_data(self, x_remap, row):
+        next_pos = -1.
+        next_idx = -1
+        while(x_remap > next_pos):
+
+            next_idx += 1
+            next_pos = self.data[next_idx][row]
+
+            if (next_pos > 1.):
+                next_idx -= 1
+                next_pos = self.data[next_idx][row]
+                break
+
+
+
+        prev_id = next_idx - 1
+
+        if prev_id < 0:
+            prev_id = len(self.data.iloc[0]) - 2
+
+        prev_pos = self.data[prev_id][row]
+        next_val = self.data[next_idx][row + 1]
+        prev_val = self.data[prev_id][row + 1]
+
+        curr_pos = (x_remap - prev_pos) / (next_pos - prev_pos)
+        if prev_pos > next_pos:
+            (x_remap + 1. - prev_pos) / (next_pos + 1. - prev_pos)
+
+        curr_val = prev_val * (1. - curr_pos) + next_val * curr_pos
+
+        return curr_val
+
+
+    def osc_setup(self):
+        # osc sender setup
+        ip_send = "127.0.0.1"
+        port_send = 7400
+
+        self.client = SimpleUDPClient(ip_send, port_send)  # Create client
+
+
+    def csv_setup(self):
+        self.osc_widget.params.a = 0.85     #inertia
+        self.osc_widget.params.b = .5       #speed
+        self.osc_widget.params.c = .6       #psi
+        self.osc_widget.params.d = 0.025    #y
+        self.osc_widget.params.e = .5       #xxx
+        self.osc_widget.params.f = .66      #xxx
+
+        self.latent_widget.latent.anim = True
+        self.latent_widget.latent.use_list = True
+        self.osc_widget.csv = True
+
+        if self.data is not None:
+            seeds_data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds.csv", header=None)
+            self.latent_widget.seeds = []
+
+            for i in range(2):
+                row = []
+                for j in range(len(seeds_data.iloc[0])):
+                    row.append(seeds_data[j][i])
+                
+                print(row)
+                self.latent_widget.seeds.append(row)
+
+
+    def csv_control(self):
+
+        # data
+        if self.counter % 120 == 0 and self.osc_widget.csv:
+            self.data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params.csv", header=None)
+            print(self.data)
+
+        data_len = 1
+        if (self.latent_widget.latent.use_list and (self.data is not None)):
+            data_len = len(self.latent_widget.seeds[0])
+
+        x_remap = abs(self.latent_widget.latent.x - np.trunc(self.latent_widget.latent.x))
+        if (data_len > 1):
+            x_val = self.latent_widget.latent.x % data_len
+            x_remap = x_val / data_len
+
+
+        self.osc_widget.values.a = self.latent_widget.latent.x % data_len
+        self.osc_widget.values.b = x_remap
+        self.osc_widget.values.c = self.latent_widget.latent.y
+
+
+        if (self.data is not None) and (self.osc_widget.csv):
+            
+            self.osc_widget.params.b = self.interpolate_data(x_remap, 0)
+            self.osc_widget.params.c = self.interpolate_data(x_remap, 2)
+
+
+        # update values
+        inertia = self.osc_widget.params.a
+        speed_mult = self.osc_widget.params.b
+        psi_mult = self.osc_widget.params.c
+        y_mult = self.osc_widget.params.d
+
+        speed = float(self.latent_widget.latent.speed)
+        psi = float(self.trunc_noise_widget.trunc_psi)
+        latent_y = float(self.latent_widget.latent.y)
+
+        # speed_dist = float(self.osc_widget.params.e)
+        # speed_mult = speed_mult * (1. - speed_dist) + speed_mult / (.001 + abs(psi))
+
+
+        # update gan
+        speed = speed_mult * (1 - inertia) + speed * inertia
+        psi = psi_mult * (1 - inertia) + psi * inertia
+        latent_y = y_mult * (1 - inertia) + latent_y * inertia
+
+        
+        self.latent_widget.latent.speed = speed
+        self.trunc_noise_widget.trunc_psi = psi
+        self.latent_widget.latent.y = latent_y
+
+
+        # send osc
+        if (self.client is not None and self.osc_widget.send_osc):
+            self.client.send_message("/interaction/speed", speed)
+            self.client.send_message("/interaction/psi", psi)
+        
+
+
 
 #----------------------------------------------------------------------------
 
@@ -263,6 +409,8 @@ class AsyncRenderer:
 
 #----------------------------------------------------------------------------
 
+
+
 @click.command()
 @click.argument('pkls', metavar='PATH', nargs=-1)
 @click.option('--capture-dir', help='Where to save screenshot captures', metavar='PATH', default=None)
@@ -277,6 +425,7 @@ def main(
     Optional PATH argument can be used specify which .pkl file to load.
     """
     viz = Visualizer(capture_dir=capture_dir)
+    viz.csv_setup()
 
     if browse_dir is not None:
         viz.pickle_widget.search_dirs = [browse_dir]
@@ -288,6 +437,8 @@ def main(
         viz.load_pickle(pkls[0])
     else:
         pretrained = [
+            "C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl",
+            "C:/Users/aless/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000896.pkl",
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhqu-1024x1024.pkl',
@@ -323,6 +474,7 @@ def main(
 
     # Run.
     while not viz.should_close():
+        viz.csv_control()
         viz.draw_frame()
     viz.close()
 
