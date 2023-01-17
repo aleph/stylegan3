@@ -84,3 +84,93 @@ scaling = 'symm' #@param ['pad', 'padside', 'symm', 'symmside']
 python ada_src/_genSGAN2.py --model "models\network-snapshot-010990-Gs.pkl" --out_dir "_out\out_SGAN2" --frames "200-40" --size "1080-3840" --scale_type 'symm' --cubic --seed 42 --verbose
 -n "1-2" --splitfine 0.
 --latmask '_in/Untitled-2.png'
+
+
+
+----------------------------------------------------------------------
+---MODEL CONVERSION---
+
+cd tensor/stylegan3
+conda activate stylegan3
+
+python visualizer_no_ui.py
+python visualizer_manual.py
+
+C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
+
+C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
+
+C:\Users\aless\tensor\stylegan3\models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896.pkl
+
+python ada_src/model_convert.py -r --source "C:\Users\aless\tensor\stylegan3\models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728.pkl" --out_dir "./models"
+
+
+
+----------------------------------------------------------------------
+---VIDEO GEN---
+
+set path=00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6
+set model_name=network-snapshot-000312-Gs.pkl
+set test_name=double-symm-90
+set test_prefix=illustrazioni-h2
+
+@REM cd ..
+
+
+@REM python ada_src/_genSGAN2.py --model "models\%path%\%model_name%" --out_dir "_out\out_SGAN2\%path%\%test_name%" --frames "90-90" --size "1080-3640" --scale_type 'symm' -n "1-2" --splitfine 0. --cubic --seed 0 --verbose
+
+ffmpeg -framerate 30 -y -v warning -thread_queue_size 512 -i "_out\out_SGAN2\%path%\%test_name%\%06d.jpg" "_out\out_SGAN2\%test_prefix%_%test_name%.mp4"
+
+## COMPARE ##
+ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_lerp.mp4 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_slerp.mp4 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_cpoly.mp4 -filter_complex "hstack=inputs=3,format=yuv420p" -c:v libx264 -crf 18 _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\multiple_gen_compare_4.mp4
+
+ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_test_down_crop.mp4 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_test_seed2.mp4 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_up\test_vid_test_up_waifu2x_2x_2n.mp4 -filter_complex "hstack=inputs=3,format=yuv420p" -c:v libx264 -crf 18 _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\multiple_gen_compare_scale.mp4
+
+ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_test_down.mp4 -filter:v "crop=1088:3840" _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_test_down_crop.mp4
+ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_test_down.mp4 -s 1088x3840 -c:a copy _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_test_down_resize.mp4
+
+
+
+## JOIN A/V ##
+ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_2.mp4 -ss 0:00:00 -t 66 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_2\23_01_16_AB_Orto_Botanico_SoundTrack_Timbro_V1.wav -c:v copy -c:a aac -fflags +shortest _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_2\test_vid_2_A.mp4
+ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_m2.mp4 -ss 0:00:00 -t 333 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_m2\23_01_17_AB_Orto_Botanico_SoundTrack_m2.wav -c:v copy -c:a aac -fflags +shortest _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_m2\test_vid_m2_A.mp4
+
+
+
+-stream_loop -1  -movflags +faststart  23_01_16_AB_Orto_Botanico_SoundTrack_Timbro_V1.wav
+
+
+----------------------------------------------------------------------
+---IMG GEN---
+#@title ### Custom size generation
+
+cubic_smooth = '--cubic ' if cubic_smooth else ''
+gauss_smooth = '--gauss ' if gauss_smooth else ''
+smooth = cubic_smooth + gauss_smooth
+
+save_lat = '--save_lat ' if save_lat else ''
+
+sizeX = 1080 #@param {type:"integer"} 
+sizeY = 3840 #@param {type:"integer"}
+size = '%d-%d' % (sizeX, sizeY)
+scaling = 'symm' #@param ['pad', 'padside', 'symm', 'symmside']
+--latmask '_in/Untitled-2.png'
+
+
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_psiL" --frames "480-20" --fps 15 --slerp --size "1152-4096" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params.csv" --latmask "_in/masks"
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_seeds_psi_4" --frames "300-20" --fps 15 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose  --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params.csv" --gen_imgs --explore_psi 4 --seeds_len 300
+
+
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_m3" --frames "3200-20" --fps 12 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_2.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_a1.csv"  --latmask "_in/masks" --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_psi_2" --frames "1000-20" --fps 12 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_a2.csv"  --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_2b" --frames "1000-20" --fps 15 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_2b.csv"  --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_slow" --frames "200-20" --fps 12 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_3.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_a3.csv"  --latmask "_in/masks" --export_csv
+
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_test_seed1" --frames "1000-20" --fps 15 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_4.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_2b.csv"  --latmask "_in/masks" --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_test_down" --frames "1000-20" --fps 15 --slerp --size "1280-4512" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_5.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_2b.csv"  --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_test_up" --frames "1000-20" --fps 15 --slerp --size "544-1920" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_5.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_2b.csv"  --latmask "_in/masks" --export_csv && 
+
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_test_seed2b" --frames "1000-20" --fps 15 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_5.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_2b.csv"  --latmask "_in/masks" --export_csv
+
+
+
+
+
+

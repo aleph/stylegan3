@@ -206,7 +206,6 @@ class Visualizer(imgui_window.ImguiWindow):
                 break
 
 
-
         prev_id = next_idx - 1
 
         if prev_id < 0:
@@ -228,6 +227,7 @@ class Visualizer(imgui_window.ImguiWindow):
     def osc_setup(self):
         # osc sender setup
         ip_send = "127.0.0.1"
+        # ip_send = "192.168.1.122"
         port_send = 7400
 
         self.client = SimpleUDPClient(ip_send, port_send)  # Create client
@@ -246,7 +246,7 @@ class Visualizer(imgui_window.ImguiWindow):
         self.osc_widget.csv = True
 
         if self.data is not None:
-            seeds_data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds.csv", header=None)
+            seeds_data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_2.csv", header=None)
             self.latent_widget.seeds = []
 
             for i in range(2):
@@ -261,8 +261,9 @@ class Visualizer(imgui_window.ImguiWindow):
     def csv_control(self):
 
         # data
-        if self.counter % 120 == 0 and self.osc_widget.csv:
-            self.data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params.csv", header=None)
+        if self.counter % 60 == 0 and self.osc_widget.csv:
+            # self.data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params.csv", header=None)
+            self.data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_a1.csv", header=None)
             print(self.data)
 
         data_len = 1
@@ -314,7 +315,8 @@ class Visualizer(imgui_window.ImguiWindow):
         # send osc
         if (self.client is not None and self.osc_widget.send_osc):
             self.client.send_message("/interaction/speed", speed)
-            self.client.send_message("/interaction/psi", psi)
+            if self.counter % 2 == 0:
+                self.client.send_message("/interaction/psi", abs(psi))
         
 
 
@@ -425,6 +427,7 @@ def main(
     Optional PATH argument can be used specify which .pkl file to load.
     """
     viz = Visualizer(capture_dir=capture_dir)
+    viz.osc_setup()
     viz.csv_setup()
 
     if browse_dir is not None:

@@ -62,6 +62,12 @@ def lerp(z1, z2, num_steps, smooth=0.):
         vectors.append(interpol)
     return np.array(vectors)
 
+def lerp_single(z1, z2, x): 
+    vectors = []
+    interpol = z1 + (z2 - z1) * x
+    vectors.append(interpol)
+    return np.array(vectors)
+
 # interpolate on hypersphere
 def slerp(z1, z2, num_steps, smooth=0.):
     z1_norm = np.linalg.norm(z1)
@@ -79,6 +85,21 @@ def slerp(z1, z2, num_steps, smooth=0.):
         vectors.append(interpol_normal)
     return np.array(vectors)
 
+def slerp_single(z1, z2, x):
+    z1_norm = np.linalg.norm(z1)
+    z2_norm = np.linalg.norm(z2)
+    z2_normal = z2 * (z1_norm / z2_norm)
+    vectors = []
+
+    interplain = z1 + (z2 - z1) * x
+    interp = z1 + (z2_normal - z1) * x
+    interp_norm = np.linalg.norm(interp)
+    interpol_normal = interplain * (z1_norm / interp_norm)
+    vectors.append(interpol_normal)
+
+    return np.array(vectors)
+
+
 def cublerp(points, steps, fstep):
     keys = np.array([i*fstep for i in range(steps)] + [steps*fstep])
     points = np.concatenate((points, np.expand_dims(points[0], 0)))
@@ -86,7 +107,192 @@ def cublerp(points, steps, fstep):
     return cspline(range(steps*fstep+1))
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+def interpolate_data(data, x_remap, row):
+    next_pos = -1.
+    next_idx = -1
+    while(x_remap > next_pos):
+
+        next_idx += 1
+        next_pos = data[next_idx][row]
+
+        if (next_pos > 1.):
+            next_idx -= 1
+            next_pos = data[next_idx][row]
+            break
+
+    prev_id = next_idx - 1
+
+    if prev_id < 0:
+        prev_id = len(data.iloc[0]) - 2
+
+    prev_pos = data[prev_id][row]
+    next_val = data[next_idx][row + 1]
+    prev_val = data[prev_id][row + 1]
+
+    curr_pos = (x_remap - prev_pos) / (next_pos - prev_pos)
+    if prev_pos > next_pos:
+        (x_remap + 1. - prev_pos) / (next_pos + 1. - prev_pos)
+
+    curr_val = prev_val * (1. - curr_pos) + next_val * curr_pos
+
+    return curr_val
+
+
+def compute_points(frames, data, inertia):
+    x = 0.
+    speed = interpolate_data(data, 0., 0)
+    print(speed)
+
+    x_points = []
+    speed_vals = []
+
+    for i in range (frames):
+        x_remap = i / frames
+        speed_mult = interpolate_data(data, x_remap, 0)
+        speed = speed_mult * (1 - inertia) + speed * inertia
+
+        x += speed
+        x_points.append(x)
+        speed_vals.append(speed)
+
+    for i in range (frames):
+        x_points[i] /= x
+
+    print("x_points" + str(x_points))
+    return x_points, speed_vals
+
+
+
+def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5, inertia=.85, poly_sub=2, cubic_poly=False, slerp=False, cubic=False, seed=None, verbose=True):
+
+    steps = len(seeds)
+    key_latents = None
+
+    # for i in range(steps):
+    #     rnd = np.random.RandomState(seeds[i])
+    #     z_vec = get_z(shape, rnd)
+    #     if i == 0:
+    #         key_latents = [z_vec]
+    #     else:
+    #         np.concatenate((key_latents, [z_vec]))
+
+    # print(np.size(key_latents))
+
+    # latents = np.expand_dims(key_latents[0], 0)
+
+
+
+    if seed is None:
+        seed = np.random.seed(int((time.time()%1) * 9999))
+    rnd = np.random.RandomState(seed)
+    rnd_j = np.random.RandomState(seed)
     
+    # make key points
+    if key_latents is None:
+        # key_latents = np.array([get_z(shape, rnd) for i in range(steps)])
+        key_latents = np.array([get_z(shape, rnd = np.random.RandomState(seeds[i])) for i in range(steps)])
+
+
+    log = ' timeline: %d steps by %d' % (steps, .1)
+
+    # populate lerp between key points
+    if cubic_poly:
+        key_latents = cublerp(key_latents, steps, poly_sub)
+        steps *= poly_sub
+        log += ', cubic_spline'
+        
+
+    print(np.size(key_latents))
+    latents = np.expand_dims(key_latents[0], 0)
+
+
+    psi_values = []
+    visual_values = []
+    x_points, speed_values = compute_points(frames, data, inertia)
+
+    
+
+    if cubic:
+        # transit = int(max(1, min(frames, transit)))
+        # steps = max(1, int(frames // transit))
+
+        latents = cublerp(key_latents, steps, transit)
+        log += ', cubic'
+    elif slerp:
+        for i in range(frames):
+            x = min(x_points[i], .999999)
+            lat_x = x * steps
+            key_id = math.floor(lat_x)
+            # print("ids: " + str(key_id) + " - " + str((key_id+1) % steps))
+
+            zA = key_latents[key_id]
+            zB = key_latents[(key_id+1) % steps]
+
+            frac_val = abs(lat_x - np.trunc(lat_x))
+            # print("xs: " + str(x) + " - " + str(frac_val))
+
+            # jitter = interpolate_data(data, x, 4)
+            jitter = 0
+            zC = get_z(shape, rnd_j)
+
+            interps_z = slerp_single(zA, zB, frac_val)
+            if jitter > 0.:
+                interps_z = slerp_single(interps_z[0], zC, jitter)
+
+            latents = np.concatenate((latents, interps_z))
+    else:
+        for i in range(frames):
+            x = min(x_points[i], .999999)
+            lat_x = x * steps
+            key_id = math.floor(lat_x)
+            # print("ids: " + str(key_id) + " - " + str((key_id+1) % steps))
+
+            zA = key_latents[key_id]
+            zB = key_latents[(key_id+1) % steps]
+
+            frac_val = abs(lat_x - np.trunc(lat_x))
+            # print("xs: " + str(x) + " - " + str(frac_val))
+
+            # jitter = interpolate_data(data, x, 4)
+            jitter = 0.
+            zC = get_z(shape, rnd_j)
+
+            interps_z = lerp_single(zA, zB, frac_val)
+            if jitter > 0.:
+                interps_z = slerp_single(interps_z[0], zC, jitter)
+
+            latents = np.concatenate((latents, interps_z))
+
+
+    psi = interpolate_data(data, .00001, 2)
+    viz = interpolate_data(data, .00001, 4)
+    # print("psi: ", psi)
+    for i in range(frames):
+        x = x_points[i]
+        psi_mult = interpolate_data(data, x, 2)
+        psi = psi_mult * (1 - inertia) + psi * inertia
+
+        psi_values.append(psi)
+
+        viz_mult = interpolate_data(data, x, 4)
+        viz = viz_mult * (1 - inertia) + viz * inertia
+
+        visual_values.append(viz)
+        # print("x: ", x, " psi_mult: ", psi_mult)
+
+
+    latents = np.array(latents)
+
+        
+    if verbose: print(log)
+    if latents.shape[0] > frames: # extra frame
+        latents = latents[1:]
+
+    return latents, psi_values, speed_values, visual_values
+
+
+
 def latent_anima(shape, frames, transit, key_latents=None, smooth=0.5, cubic=False, gauss=False, seed=None, verbose=True):
     if key_latents is None:
         transit = int(max(1, min(frames, transit)))
@@ -117,7 +323,7 @@ def latent_anima(shape, frames, transit, key_latents=None, smooth=0.5, cubic=Fal
                 interps_z = slerp(zA, zB, transit, smooth=smooth)
                 latents = np.concatenate((latents, interps_z))
     latents = np.array(latents)
-    
+
     if gauss:
         lats_post = gaussian_filter(latents, [transit, 0, 0], mode="wrap")
         lats_post = (lats_post / np.linalg.norm(lats_post, axis=-1, keepdims=True)) * math.sqrt(np.prod(shape))
@@ -128,6 +334,7 @@ def latent_anima(shape, frames, transit, key_latents=None, smooth=0.5, cubic=Fal
     if latents.shape[0] > frames: # extra frame
         latents = latents[1:]
     return latents
+
     
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = 
     
