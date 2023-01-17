@@ -246,7 +246,7 @@ class Visualizer(imgui_window.ImguiWindow):
         self.osc_widget.csv = True
 
         if self.data is not None:
-            seeds_data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_2.csv", header=None)
+            seeds_data = pd.read_csv(r" _in\_gen\seeds_5.csv", header=None)
             self.latent_widget.seeds = []
 
             for i in range(2):
@@ -263,7 +263,7 @@ class Visualizer(imgui_window.ImguiWindow):
         # data
         if self.counter % 60 == 0 and self.osc_widget.csv:
             # self.data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params.csv", header=None)
-            self.data = pd.read_csv(r"C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_a1.csv", header=None)
+            self.data = pd.read_csv(r"_in\_gen\params_2b.csv", header=None)
             print(self.data)
 
         data_len = 1
