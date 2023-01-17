@@ -99,6 +99,7 @@ python visualizer_manual.py
 C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
 
 C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
+C:\Users\Alessandro\tensor\stylegan3\models\network-snapshot-010990.pkl
 
 C:\Users\aless\tensor\stylegan3\models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896.pkl
 
@@ -165,7 +166,11 @@ python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3
 
 python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_audio_1" --frames "2000-20" --fps 15 --slerp --size "816-2880" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_5.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_audio_1.csv"  --latmask "_in/masks" --export_csv
 
+<<<<<<< Updated upstream
 python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_audio_1" --frames "2000-20" --fps 15 --slerp --size "816-2880" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\seeds_5.csv" --params_path "C:\Users\aless\Documents\__Fuse\Orto Botanico Padova\Visual\_gen\params_audio_1.csv"  --latmask "_in/masks" --export_csv
+=======
+python ada_src/_genSGAN2_general.py --model "models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896-Gs.pkl" --out_dir "_out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_vid_test_seed2b" --frames "1000-20" --fps 15 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _in\_gen\seeds_5.csv --params_path _in\_gen\params_2b.csv  --latmask "_in/masks" --export_csv
+>>>>>>> Stashed changes
 
 
 
