@@ -170,7 +170,7 @@ def generate():
         seeds_row = []
         if a.gen_imgs:
             for j in range(a.seeds_len):
-                seeds_row.append(j + 100 * i)
+                seeds_row.append(j + 100 * (i + 1))
         else:
             seeds_row = seeds_data.iloc[i]
 
