@@ -270,7 +270,8 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
     # print("psi: ", psi)
     for i in range(frames):
         x = x_points[i]
-        psi_mult = interpolate_data(data, x, 2)
+        x_2 = i / float(frames)
+        psi_mult = interpolate_data(data, x_2, 2)
         psi = psi_mult * (1 - inertia) + psi * inertia
 
         psi_values.append(psi)
