@@ -164,7 +164,7 @@ def compute_points(frames, data, inertia):
 
 
 
-def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5, inertia=.85, poly_sub=2, cubic_poly=False, slerp=False, cubic=False, seed=None, verbose=True):
+def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5, inertia=.85, poly_sub=4, cubic_poly=False, slerp=False, cubic=False, seed=None, verbose=True):
 
     steps = len(seeds)
     key_latents = None
