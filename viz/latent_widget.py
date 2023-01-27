@@ -121,8 +121,9 @@ class LatentWidget:
             next_plane = min(seed_plane + 1, 1)
 
             frac_h = 1.
-            if self.latent.y > .33 and self.latent.y < .66:
-                frac_h = 1. - ((self.latent.y - .33) * 3.)
+            # if self.latent.y > .33 and self.latent.y < .66:
+            #     frac_h = 1. - ((self.latent.y - .33) * 3.)
+            # frac_h = 1. - self.latent.y
 
 
             last_val = np.floor(self.latent.x)

@@ -3,12 +3,21 @@ conda activate stylegan3
 
 python visualizer_no_ui.py
 python visualizer_manual.py
+python visualizer_osc.py
 
 C:\Users\aless\tensor\stylegan3\_utils\startup_script.bat
 
 C:\Users\aless\tensor\stylegan3\models\network-snapshot-010990.pkl
 
 C:\Users\aless\tensor\stylegan3\models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000896.pkl
+
+C:\Users\aless\tensor\stylegan3\models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000648.pkl
+C:\Users\aless\tensor\stylegan3\models\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-001496.pkl
+C:\Users\aless\tensor\stylegan3\models\00027-stylegan2-incisioni-h4_m3half-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000368.pkl
+C:\Users\aless\tensor\stylegan3\models\00028-stylegan2-incisioni-h4_m3-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000328.pkl
+
+
+
 
 python ada_src/model_convert.py -r --source "C:\Users\aless\tensor\stylegan3\models\00016-stylegan2-incisioni-i-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000728.pkl" --out_dir "./models"
 

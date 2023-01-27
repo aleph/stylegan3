@@ -42,6 +42,7 @@ parser.add_argument('--verbose', '-v', action='store_true')
 # animation
 parser.add_argument('--frames', default='200-25', help='total frames to generate, length of interpolation step')
 parser.add_argument("--cubic_poly", action='store_true', help="use cubic splines for poly")
+parser.add_argument("--lerp", action='store_true')
 parser.add_argument("--slerp", action='store_true')
 parser.add_argument("--cubic", action='store_true', help="use cubic splines for smoothing")
 parser.add_argument("--gauss", action='store_true', help="use Gaussian smoothing")
@@ -251,6 +252,8 @@ def generate():
         if a.explore_psi > 0:
             for j in range(a.explore_psi):
                 psi_val = 1. / float(a.explore_psi) * (j + 1)
+                if a.explore_psi == 1:
+                    psi_val = .75
                 output = Gs(latent, label, latmask, dc, truncation_psi=psi_val, noise_mode='const')
                 output = (output.permute(0,2,3,1) * 127.5 + 128).clamp(0, 255).to(torch.uint8).cpu().numpy()
 

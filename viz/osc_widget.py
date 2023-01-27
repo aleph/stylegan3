@@ -18,8 +18,9 @@ class OscWidget:
     
     def __init__(self, viz):
         self.viz    = viz
-        self.listen = True
-        self.csv    = False
+        self.listen = False
+        self.listen_osc = True
+        self.csv    = True
         self.send_osc    = False
 
         self.values = dnnlib.EasyDict(a=0., b=0., c=0., d=0., e=0., f=0.)
@@ -76,8 +77,11 @@ class OscWidget:
             
             _clicked, self.csv  = imgui.checkbox('csv', self.csv)
             imgui.same_line(viz.label_w * 1.5)
+            _clicked, self.listen  = imgui.checkbox('listen', self.listen)
+            imgui.same_line(viz.label_w * 3)
+            _clicked, self.listen_osc  = imgui.checkbox('listen osc', self.listen_osc)
+            imgui.same_line(viz.label_w * 4.5)
             _clicked, self.send_osc  = imgui.checkbox('send osc', self.send_osc)
-
 
 
 #----------------------------------------------------------------------------
