@@ -318,7 +318,8 @@ class AsyncRenderer:
 # osc server setup
 count_size = [0, 0]
 
-ip = "127.0.0.1"
+# ip = "127.0.0.1"
+ip = "192.168.1.173"
 port = 8000
 
 hands_vec = [False, False]
@@ -452,6 +453,8 @@ def osc_in_handler(address: str, *args: List[Any]) -> None:
     # osc_speed = float(args[1])
     # osc_psi = float(args[2])
 
+    # print("msg received")
+
     
     count_size[0] += 1
     if count_size[0] % 5000 == 0:
@@ -477,16 +480,16 @@ def osc_setup(viz):
 
 
 def csv_setup(viz):
-    viz.osc_widget.params.a = 0.6     #inertia
-    viz.osc_widget.params.b = .5       #speed
-    viz.osc_widget.params.c = .6       #psi
-    viz.osc_widget.params.d = 0.    #y
-    viz.osc_widget.params.e = .5       #xxx
-    viz.osc_widget.params.f = .66      #xxx
+    viz.osc_widget.params.a = .4        #inertia
+    viz.osc_widget.params.b = .5        #speed
+    viz.osc_widget.params.c = .6        #psi
+    viz.osc_widget.params.d = .0        #y
+    viz.osc_widget.params.e = .5        #xxx
+    viz.osc_widget.params.f = .66       #xxx
 
     viz.latent_widget.latent.use_list = True
 
-    viz.seeds_data = pd.read_csv(r"C:\Users\aless\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
+    viz.seeds_data = pd.read_csv(r"C:\Users\Alessandro\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
     viz.latent_widget.seeds = []
 
 
@@ -502,8 +505,8 @@ def csv_setup(viz):
 def osc_control_in(viz):
     
     # data
-    if viz.counter % 60 == 0 and viz.osc_widget.csv:
-        viz.seeds_data = pd.read_csv(r"C:\Users\aless\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
+    if viz.counter % 120 == 0 and viz.osc_widget.csv:
+        viz.seeds_data = pd.read_csv(r"C:\Users\Alessandro\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
         viz.latent_widget.seeds = []
         print("updating seeds:")
 
@@ -716,9 +719,10 @@ async def main(
     else:
         pretrained = [
             "C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl",
-            "C:/Users/aless/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000896.pkl",
-            "C:/Users/aless/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-001496.pkl",
-            "C:/Users/aless/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000048.pkl",
+            "C:/Users/Alessandro/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000896.pkl",
+            "C:/Users/Alessandro/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-001496.pkl",
+            "C:/Users/Alessandro/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000048.pkl",
+            "C:/Users/Alessandro/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000216.pkl",
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhqu-1024x1024.pkl',

@@ -12,6 +12,7 @@ import legacy
 import imageio
 import math
 
+import time
 import pandas as pd
 
 from util.utilgan import latent_anima, basename, img_read, img_list, latent_timeline
@@ -51,6 +52,10 @@ parser.add_argument("--no_image_save", action='store_true')
 parser.add_argument("--gen_imgs", action='store_true')
 parser.add_argument("--explore_psi", type=int, default=0)
 parser.add_argument("--seeds_len", type=int, default=20)
+parser.add_argument("--start_point", type=float, default=0.)
+parser.add_argument("--end_point", type=float, default=1.)
+parser.add_argument("--real_time_fps", type=float, default=0)
+parser.add_argument("--inertia", type=float, default=.5)
 
 
 # csv
@@ -177,7 +182,7 @@ def generate():
 
         print(' seeds: ', seeds_row)
 
-        test_lat, test_psi, test_speed, test_visual = latent_timeline((1, Gs.z_dim), a.frames, data, seeds=seeds_row, inertia=.6, seed=a.seed, cubic_poly=a.cubic_poly, slerp=a.slerp, cubic=a.cubic, transit=a.fstep) # [frm,1,512]
+        test_lat, test_psi, test_speed = latent_timeline((1, Gs.z_dim), a.frames, data, seeds=seeds_row, inertia=a.inertia, seed=a.seed, cubic_poly=a.cubic_poly, slerp=a.slerp, cubic=a.cubic, transit=a.fstep, fps=a.real_time_fps) # [frm,1,512]
         lats.append(test_lat) # list of [frm,1,512]
     latents = np.concatenate(lats, 1) # [frm,X,512]
     print(' latents: ', latents.shape)
@@ -186,8 +191,8 @@ def generate():
 
     print("printing_tests: ")
     print(test_lat)
-    print(test_psi)   
-    print(test_visual)   
+    print(test_psi)
+    
 
     if a.export_csv:
         # data_list = []
@@ -242,7 +247,14 @@ def generate():
         video_out = imageio.get_writer(str(osp.join(a.out_dir, a.gen_name + ".mp4")), mode='I', fps=a.fps, codec='libx264') #video
 
     # generate images from latent timeline
-    for i in range(frame_count):
+    start_frame = math.floor(frame_count * a.start_point)
+    end_frame = math.ceil(frame_count * a.end_point)
+
+    print(f"start: {start_frame}, end: {end_frame} | total frames: {end_frame - start_frame}")
+
+
+    # for i in range(frame_count):
+    for i in range(start_frame, end_frame):
     
         latent  = latents[i] # [X,512]
         label   = labels[i % len(labels)]

@@ -163,11 +163,35 @@ def compute_points(frames, data, inertia):
     return x_points, speed_vals
 
 
+def compute_points_fps(frames, data, inertia, fps):
+    x_points = []
+    speed_vals = []
 
-def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5, inertia=.85, poly_sub=4, cubic_poly=False, slerp=False, cubic=False, seed=None, verbose=True):
+    x = 0.
+    speed = data[0][1]
+    print(speed)
+    frame_delta = 1. / float(fps)
 
-    steps = len(seeds)
-    key_latents = None
+    for i in range (frames):
+        speed_mult = data[i][1]
+        speed = speed_mult * (1 - inertia) + speed * inertia
+
+        x += frame_delta * speed
+        x_points.append(x)
+        speed_vals.append(speed)
+
+    print(f"real seeds len: {x}")
+
+    for i in range (frames):
+        x_points[i] /= x
+
+    print("x_points" + str(x_points))
+    return x_points, speed_vals
+
+
+
+
+def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5, inertia=.85, poly_sub=4, cubic_poly=False, slerp=False, cubic=False, seed=None, verbose=True, fps=0):
 
     # for i in range(steps):
     #     rnd = np.random.RandomState(seeds[i])
@@ -182,11 +206,13 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
     # latents = np.expand_dims(key_latents[0], 0)
 
 
+    steps = len(seeds)
+    key_latents = None
+
 
     if seed is None:
         seed = np.random.seed(int((time.time()%1) * 9999))
     rnd = np.random.RandomState(seed)
-    rnd_j = np.random.RandomState(seed)
     
     # make key points
     if key_latents is None:
@@ -209,7 +235,12 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
 
     psi_values = []
     visual_values = []
-    x_points, speed_values = compute_points(frames, data, inertia)
+    # x_points, speed_values
+
+    if fps > 0:
+        x_points, speed_values = compute_points_fps(frames, data, inertia, fps)
+    else:
+        x_points, speed_values = compute_points(frames, data, inertia)
 
     
 
@@ -219,28 +250,6 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
 
         latents = cublerp(key_latents, steps, transit)
         log += ', cubic'
-    elif slerp:
-        for i in range(frames):
-            x = min(x_points[i], .999999)
-            lat_x = x * steps
-            key_id = math.floor(lat_x)
-            # print("ids: " + str(key_id) + " - " + str((key_id+1) % steps))
-
-            zA = key_latents[key_id]
-            zB = key_latents[(key_id+1) % steps]
-
-            frac_val = abs(lat_x - np.trunc(lat_x))
-            # print("xs: " + str(x) + " - " + str(frac_val))
-
-            # jitter = interpolate_data(data, x, 4)
-            jitter = 0
-            zC = get_z(shape, rnd_j)
-
-            interps_z = slerp_single(zA, zB, frac_val)
-            if jitter > 0.:
-                interps_z = slerp_single(interps_z[0], zC, jitter)
-
-            latents = np.concatenate((latents, interps_z))
     else:
         for i in range(frames):
             x = min(x_points[i], .999999)
@@ -252,35 +261,31 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
             zB = key_latents[(key_id+1) % steps]
 
             frac_val = abs(lat_x - np.trunc(lat_x))
-            # print("xs: " + str(x) + " - " + str(frac_val))
 
-            # jitter = interpolate_data(data, x, 4)
-            jitter = 0.
-            zC = get_z(shape, rnd_j)
+            if slerp:
+                interps_z = slerp_single(zA, zB, frac_val)
+            else:
+                interps_z = lerp_single(zA, zB, frac_val)
 
-            interps_z = lerp_single(zA, zB, frac_val)
-            if jitter > 0.:
-                interps_z = slerp_single(interps_z[0], zC, jitter)
 
             latents = np.concatenate((latents, interps_z))
 
-
     psi = interpolate_data(data, .00001, 2)
-    viz = interpolate_data(data, .00001, 4)
-    # print("psi: ", psi)
-    for i in range(frames):
-        x = x_points[i]
-        x_2 = i / float(frames)
-        psi_mult = interpolate_data(data, x_2, 2)
-        psi = psi_mult * (1 - inertia) + psi * inertia
 
-        psi_values.append(psi)
 
-        viz_mult = interpolate_data(data, x, 4)
-        viz = viz_mult * (1 - inertia) + viz * inertia
+    if fps > 0:
+        for i in range(frames):
+            psi_mult = data[i][3]
+            psi = psi_mult * (1 - inertia) + psi * inertia
 
-        visual_values.append(viz)
-        # print("x: ", x, " psi_mult: ", psi_mult)
+            psi_values.append(psi)
+    else:
+        for i in range(frames):
+            x_2 = i / float(frames)
+            psi_mult = interpolate_data(data, x_2, 2)
+            psi = psi_mult * (1 - inertia) + psi * inertia
+
+            psi_values.append(psi)
 
 
     latents = np.array(latents)
@@ -290,7 +295,7 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
     if latents.shape[0] > frames: # extra frame
         latents = latents[1:]
 
-    return latents, psi_values, speed_values, visual_values
+    return latents, psi_values, speed_values
 
 
 
