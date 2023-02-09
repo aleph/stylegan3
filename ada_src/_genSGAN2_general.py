@@ -278,6 +278,9 @@ def generate():
             # generate multi-latent result
             if custom:
                 if a.use_csv:
+                    # current_psi = test_psi[i]
+                    # if (end_frame - i < 2):
+                    #     current_psi = test_psi[0]
                     output = Gs(latent, label, latmask, dc, truncation_psi=test_psi[i], noise_mode='const')
 
                 else:

@@ -271,6 +271,7 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
             latents = np.concatenate((latents, interps_z))
 
     psi = interpolate_data(data, .00001, 2)
+    psi_0 = psi
 
 
     if fps > 0:
@@ -284,6 +285,15 @@ def latent_timeline(shape, frames, data, seeds=[0, 1, 2], transit=15, smooth=0.5
             x_2 = i / float(frames)
             psi_mult = interpolate_data(data, x_2, 2)
             psi = psi_mult * (1 - inertia) + psi * inertia
+
+
+            end_val = frames - i
+            tapering_len = 600.0
+
+            if (end_val < tapering_len):
+                tapering = end_val/tapering_len
+                psi = psi * (tapering) + psi_0 * (1. - tapering)
+
 
             psi_values.append(psi)
 
