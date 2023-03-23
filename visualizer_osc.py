@@ -39,6 +39,11 @@ import csv
 import random
 import pandas as pd
 
+# load library
+# from Library.Spout import Spout
+import torch
+import PIL.Image
+
 #----------------------------------------------------------------------------
 
 class Visualizer(imgui_window.ImguiWindow):
@@ -94,6 +99,16 @@ class Visualizer(imgui_window.ImguiWindow):
         self.set_position(0, 0)
         self._adjust_font_size()
         self.skip_frame() # Layout may change after first frame.
+
+
+        # #---SPOUT SETUP
+        # # create spout object
+        # self.spout = Spout(silent = False, width = 1024, height = 1024)
+        # # create receiver
+        # self.spout.createReceiver('input')
+        # # create sender
+        # self.spout.createSender('output')
+        # self.spout_img = None
 
 
 
@@ -207,6 +222,26 @@ class Visualizer(imgui_window.ImguiWindow):
             zoom = np.floor(zoom) if zoom >= 1 else zoom
             zoom = 1
             self._tex_obj.draw(pos=pos, zoom=zoom, align=0.5, rint=True)
+
+            # # spout_data = self.result.image
+            # # spout_data = (self.result.image.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+            # # PIL.Image.fromarray(spout_data[0].cpu().numpy(), 'RGB').save(f'carlo.png')
+            # print(self.result.image, " | ", self.result.image.shape)
+            # # print(self._tex_img, " | ", self._tex_img.shape)
+            # # print(self._tex_obj, " | ", self._tex_obj.shape)
+            # # PIL.Image.fromarray(spout_data, 'RGB').save('carlo.png')
+            # # data = img[0].cpu().numpy()
+
+            # spout_data = PIL.Image.fromarray(self.result.image, 'RGB')
+            # spout_data.save('carlo.png')
+            # # print(spout_data, " | ", spout_data.size)
+
+            # # spout_img = np.array(spout_data)
+            # # self.spout.send(spout_img)
+            # self.spout_img = self._tex_img.copy()
+            # print(self.spout_img, " | ", self.spout_img.shape)
+
+
         if 'error' in self.result:
             self.print_error(self.result.error)
             if 'message' not in self.result:
@@ -222,6 +257,7 @@ class Visualizer(imgui_window.ImguiWindow):
 
 
         self.counter += 1
+        
 
 #----------------------------------------------------------------------------
 
@@ -318,8 +354,8 @@ class AsyncRenderer:
 # osc server setup
 count_size = [0, 0]
 
-# ip = "127.0.0.1"
-ip = "192.168.1.173"
+ip = "127.0.0.1"
+# ip = "192.168.1.173"
 port = 8000
 
 hands_vec = [False, False]
@@ -489,7 +525,7 @@ def csv_setup(viz):
 
     viz.latent_widget.latent.use_list = True
 
-    viz.seeds_data = pd.read_csv(r"C:\Users\Alessandro\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
+    viz.seeds_data = pd.read_csv(r"C:\Users\aless\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
     viz.latent_widget.seeds = []
 
 
@@ -506,7 +542,7 @@ def osc_control_in(viz):
     
     # data
     if viz.counter % 120 == 0 and viz.osc_widget.csv:
-        viz.seeds_data = pd.read_csv(r"C:\Users\Alessandro\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
+        viz.seeds_data = pd.read_csv(r"C:\Users\aless\tensor\stylegan3\_gen\seeds_osc.csv", header=None)
         viz.latent_widget.seeds = []
         print("updating seeds:")
 
@@ -674,6 +710,18 @@ async def loop(viz):
             osc_control_in(viz)
 
         viz.draw_frame()
+        # viz.get_frame()     ##HEADLESS
+        
+        # if viz.spout_img is not None:
+        #     viz.spout.send(viz.spout_img)
+
+        # # check on close window
+        # viz.spout.check()
+        # # receive data
+        # data = viz.spout.receive()
+        # print(data, " | ", data.shape)
+        # # send data
+        # viz.spout.send(data)
 
         for i in range (500):
             await asyncio.sleep(0)
@@ -694,6 +742,7 @@ async def main(
     capture_dir = "./out"
     pkls = []
     # pkls = ["C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl"]    ##NO_GUI
+    # pkls = ["C:/Users/aless/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000216.pkl"]    ##HEADLESS
     
     """Interactive model visualizer.
 
@@ -719,10 +768,10 @@ async def main(
     else:
         pretrained = [
             "C:/Users/aless/tensor/stylegan3/models/network-snapshot-010990.pkl",
-            "C:/Users/Alessandro/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000896.pkl",
-            "C:/Users/Alessandro/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-001496.pkl",
-            "C:/Users/Alessandro/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000048.pkl",
-            "C:/Users/Alessandro/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000216.pkl",
+            "C:/Users/aless/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000896.pkl",
+            "C:/Users/aless/tensor/stylegan3/models/00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-001496.pkl",
+            "C:/Users/aless/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000048.pkl",
+            "C:/Users/aless/tensor/stylegan3/models/00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6/network-snapshot-000216.pkl",
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl',
             'https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhqu-1024x1024.pkl',

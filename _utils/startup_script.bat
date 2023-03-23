@@ -8,12 +8,12 @@ echo Tracking Control Panel
 start "Control Panel" "C:\Program Files\Ultraleap\TrackingControlPanel\bin\TrackingControlPanel.exe"
 
 echo Leap Motion
-start "Leap Motion" "C:\Users\aless\Unity\LMT_Headless_3\Leap_Motion_Test.exe"
-@REM start "Leap Motion" "C:\Users\aless\Unity\LMT_Build_3\Leap_Motion_Test.exe"
+@REM start "Leap Motion" "C:\Users\aless\Unity\LMT_Headless_3\Leap_Motion_Test.exe"
+start "Leap Motion" "C:\Users\aless\Unity\LMT_Build_3\Leap_Motion_Test.exe"
 
 
 echo MAX
-start "Max" "C:\Users\aless\Documents\__Fuse\AB .Interactive\AB_Medulla_MaxMSP\AB.maxpat"
+@REM start "Max" "C:\Users\aless\Documents\__Fuse\AB .Interactive\AB_Medulla_MaxMSP\AB.maxpat"
 
 
 @REM echo Open Frameworks

@@ -10,6 +10,7 @@
 
 import copy
 import os
+import os.path as osp
 import re
 from typing import List, Optional, Tuple, Union
 
@@ -20,6 +21,8 @@ import numpy as np
 import scipy.interpolate
 import torch
 from tqdm import tqdm
+from imageio import imsave
+import PIL.Image
 
 import legacy
 
@@ -43,7 +46,7 @@ def layout_grid(img, grid_w=None, grid_h=1, float_to_uint8=True, chw_to_hwc=True
 
 #----------------------------------------------------------------------------
 
-def gen_interp_video(G, mp4: str, seeds, shuffle_seed=None, w_frames=60*4, kind='cubic', grid_dims=(1,1), num_keyframes=None, wraps=2, psi=1, device=torch.device('cuda'), **video_kwargs):
+def gen_interp_video(G, mp4: str, folder: str, seeds, shuffle_seed=None, w_frames=60*4, kind='cubic', grid_dims=(1,1), num_keyframes=None, wraps=2, psi=1, device=torch.device('cuda'), **video_kwargs):
     grid_w = grid_dims[0]
     grid_h = grid_dims[1]
 
@@ -86,6 +89,12 @@ def gen_interp_video(G, mp4: str, seeds, shuffle_seed=None, w_frames=60*4, kind=
                 w = torch.from_numpy(interp(frame_idx / w_frames)).to(device)
                 img = G.synthesis(ws=w.unsqueeze(0), noise_mode='const')[0]
                 imgs.append(img)
+
+                if folder is not None:
+                    output = (img.permute(1,2,0) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
+                    filename = osp.join(folder, "%06d.%s" % (frame_idx,".png"))
+                    PIL.Image.fromarray(output.cpu().numpy(), 'RGB').save(filename)
+
         video_out.append_data(layout_grid(torch.stack(imgs), grid_w=grid_w, grid_h=grid_h))
     video_out.close()
 
@@ -133,6 +142,7 @@ def parse_tuple(s: Union[str, Tuple[int,int]]) -> Tuple[int, int]:
 @click.option('--w-frames', type=int, help='Number of frames to interpolate between latents', default=120)
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=1, show_default=True)
 @click.option('--output', help='Output .mp4 filename', type=str, required=True, metavar='FILE')
+@click.option('--output_imgs', help='Output folder', type=str, default=None)
 def generate_images(
     network_pkl: str,
     seeds: List[int],
@@ -141,7 +151,8 @@ def generate_images(
     grid: Tuple[int,int],
     num_keyframes: Optional[int],
     w_frames: int,
-    output: str
+    output: str,
+    output_imgs: str
 ):
     """Render a latent vector interpolation video.
 
@@ -170,7 +181,7 @@ def generate_images(
     with dnnlib.util.open_url(network_pkl) as f:
         G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
 
-    gen_interp_video(G=G, mp4=output, bitrate='12M', grid_dims=grid, num_keyframes=num_keyframes, w_frames=w_frames, seeds=seeds, shuffle_seed=shuffle_seed, psi=truncation_psi)
+    gen_interp_video(G=G, mp4=output, folder=output_imgs, bitrate='12M', grid_dims=grid, num_keyframes=num_keyframes, w_frames=w_frames, seeds=seeds, shuffle_seed=shuffle_seed, psi=truncation_psi)
 
 #----------------------------------------------------------------------------
 

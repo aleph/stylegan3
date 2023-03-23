@@ -7,6 +7,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 """Generate images using pretrained network pickle."""
+from Library.Spout import Spout
 
 import os
 import re
@@ -17,6 +18,7 @@ import dnnlib
 import numpy as np
 import PIL.Image
 import torch
+import datetime
 
 import legacy
 
@@ -68,15 +70,30 @@ def make_transform(translate: Tuple[float,float], angle: float):
 
 #----------------------------------------------------------------------------
 
+# def get_pinned_buf(self, ref):
+#     key = (tuple(ref.shape), ref.dtype)
+#     buf = self._pinned_bufs.get(key, None)
+#     if buf is None:
+#         buf = torch.empty(ref.shape, dtype=ref.dtype).pin_memory()
+#         self._pinned_bufs[key] = buf
+#     return buf
+
+# def to_cpu(self, buf):
+#     return self.get_pinned_buf(buf).copy_(buf).clone()
+
+
+#----------------------------------------------------------------------------
+
 @click.command()
 @click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
 @click.option('--seeds', type=parse_range, help='List of random seeds (e.g., \'0,1,4-6\')', required=True)
 @click.option('--trunc', 'truncation_psi', type=float, help='Truncation psi', default=1, show_default=True)
-@click.option('--class', 'class_idx', type=int, help='Class label (unconditional if not specified)')
 @click.option('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const', show_default=True)
 @click.option('--translate', help='Translate XY-coordinate (e.g. \'0.3,1\')', type=parse_vec2, default='0,0', show_default=True, metavar='VEC2')
 @click.option('--rotate', help='Rotation angle in degrees', type=float, default=0, show_default=True, metavar='ANGLE')
 @click.option('--outdir', help='Where to save the output images', type=str, required=True, metavar='DIR')
+@click.option('--save_imgs', help='save images', type=float, default=0,)
+
 def generate_images(
     network_pkl: str,
     seeds: List[int],
@@ -85,43 +102,47 @@ def generate_images(
     outdir: str,
     translate: Tuple[float,float],
     rotate: float,
-    class_idx: Optional[int]
+    save_imgs: float
+    # class_idx: Optional[int]
 ):
-    """Generate images using pretrained network pickle.
-
-    Examples:
-
-    \b
-    # Generate an image using pre-trained AFHQv2 model ("Ours" in Figure 1, left).
-    python gen_images.py --outdir=out --trunc=1 --seeds=2 \\
-        --network=https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-afhqv2-512x512.pkl
-
-    \b
-    # Generate uncurated images with truncation using the MetFaces-U dataset
-    python gen_images.py --outdir=out --trunc=0.7 --seeds=600-605 \\
-        --network=https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-t-metfacesu-1024x1024.pkl
-    """
+    
+    #---SETUP
+    global spout, device, G, psi, z, label, seed_idx, current_time, last_time, fps
+    # create spout object
+    spout = Spout(silent = False, width = 1024, height = 1024)
+    # create sender
+    spout.createSender('input_gan')
 
     print('Loading networks from "%s"...' % network_pkl)
     device = torch.device('cuda')
     with dnnlib.util.open_url(network_pkl) as f:
         G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
 
+    psi = 1
+    seed = 0
+    z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
+    label = torch.zeros([1, G.c_dim], device=device)
+    seed_idx = 0
+    current_time = datetime.datetime.now()
+    last_time = datetime.datetime.now()
+    counter = 0
+    fps = 0
+
     os.makedirs(outdir, exist_ok=True)
 
-    # Labels.
-    label = torch.zeros([1, G.c_dim], device=device)
-    if G.c_dim != 0:
-        if class_idx is None:
-            raise click.ClickException('Must specify class label with --class when using a conditional network')
-        label[:, class_idx] = 1
-    else:
-        if class_idx is not None:
-            print ('warn: --class=lbl ignored when running on an unconditional network')
 
-    # Generate images.
-    for seed_idx, seed in enumerate(seeds):
-        print('Generating image for seed %d (%d/%d) ...' % (seed, seed_idx, len(seeds)))
+    #---UPDATE
+    while True: # Ctrl+C to stop
+        seed_idx += 1
+        if seed_idx >= len(seeds):
+            seed_idx = 0
+        
+        seed = seeds[seed_idx]
+
+        # check on close window
+        spout.check()
+
+        # print('Generating image for seed %d (%d/%d) ...' % (seed, seed_idx, len(seeds)))
         z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
 
         # Construct an inverse rotation/translation matrix and pass to the generator.  The
@@ -132,9 +153,35 @@ def generate_images(
             m = np.linalg.inv(m)
             G.synthesis.input.transform.copy_(torch.from_numpy(m))
 
+
         img = G(z, label, truncation_psi=truncation_psi, noise_mode=noise_mode)
+        # img = (img - img + 200)
+        # img = (img.permute(0, 2, 3, 1)).clamp(0, 255).to(torch.uint8)
         img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
-        PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/seed_{seed:04d}_t_{truncation_psi:0.2f}.png')
+
+
+        #data = self.to_cpu(img[0]).numpy()
+        data = img[0].cpu().numpy()
+        spout.send(data)
+        # image = PIL.Image.fromarray(data, 'RGB')
+        # spout.send(image)
+
+        
+        current_time = datetime.datetime.now()
+        time_diff = current_time - last_time
+        time_diff = time_diff.total_seconds()
+        last_time = datetime.datetime.now()
+        fps = fps * .9 + (1. / time_diff) * .1
+
+
+        if (counter % 60 == 0):
+            print(f"shape: {img.shape} | fps: {fps}")
+
+        counter += 1
+        # print("--------")
+        if (save_imgs):
+            PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/seed_{seed:04d}_t_{truncation_psi:0.2f}.png')
+            
 
 
 #----------------------------------------------------------------------------
