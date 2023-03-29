@@ -1,11 +1,48 @@
 cd C:\Users\aless\tensor\stylegan3
+
+cd tensor\stylegan3
 conda activate stylegan3
 
-python test_spout.py
+python gen_images_spout.py --seeds=100-300 --network=models\network-snapshot-010990.pkl
 
-python gen_images.py --outdir=_out\test_rt --trunc=.2 --seeds=100-356 --network=models\network-snapshot-010990.pkl
+python ada_src/gen_images_spout_extended.py --seeds=100-300 --size 1024-1024 --nXY 2-1 --network=models\network-snapshot-010990-Gs.pkl --extended_gen
+python ada_src/gen_images_spout_extended.py --seeds=1000-10000 --network=models\network-snapshot-010990.pkl
 
-python RTgan.py
+
+conda list -e > requirements.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
