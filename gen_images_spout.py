@@ -26,8 +26,6 @@ import os.path as osp
 import legacy
 import argparse
 
-from util.utilgan import img_read, img_list      # using ada
-
 # ---- OSC -----
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import BlockingOSCUDPServer
@@ -132,11 +130,13 @@ def cublerp(points, steps, fstep):
 
 def get_speed(address, *args):
     global speed
-    speed = args[0]
+    if not np.isnan(args[0]):
+        speed = args[0]
 
 def get_psi(address, *args):
     global psi,counter
-    psi = args[0]
+    if not np.isnan(args[0]):
+        psi = args[0]
     # print(f"psi: {psi} | counter: {counter}")
 
 def get_y(address, *args):
@@ -176,19 +176,13 @@ parser.add_argument('--seeds_csv', help='use a csv list of seeds', default='')
 parser.add_argument('--seeds', type=parse_range, help='List of random seeds (e.g., \'0,1,4-6\')', required=True)
 # general
 parser.add_argument('--psi', type=float, help='Truncation psi', default=.8,)
-parser.add_argument('--speed', type=float, help='Truncation psi', default=.1,)
+parser.add_argument('--speed', type=float, help='speed', default=.1,)
 parser.add_argument('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const')
 parser.add_argument('--translate', help='Translate XY-coordinate (e.g. \'0.3,1\')', type=parse_vec2, default='0,0', metavar='VEC2')
 parser.add_argument('--rotate', help='Rotation angle in degrees', type=float, default=0, metavar='ANGLE')
 parser.add_argument('--send_texture', help='send texture over spout', action='store_true', default=True)
 parser.add_argument('--save_imgs', help='save images', action='store_true')
-
-# ada
-parser.add_argument('--extended_gen',  action='store_true', default=False)
-parser.add_argument('--size', default='1024-1024', help='output resolution, set in X-Y format')
-parser.add_argument('--scale_type', default='symm', help="main types: pad, padside, symm, symmside")
-parser.add_argument('--latmask', default=None, help='external mask file (or directory) for multi latent blending')
-parser.add_argument('--nXY', '-n', default='1-1', help='multi latent frame split count by X (width) and Y (height)')
+parser.add_argument('--target_fps', help='target fps', type=float, default=60)
 
 args = parser.parse_args()
 
@@ -205,9 +199,6 @@ rotate = args.rotate
 interpolation = 'slerp'
 
 counter = 0
-
-if args.size is not None: args.size = [int(s) for s in args.size.split('-')][::-1]
-
 
 
 #---OSC
@@ -227,70 +218,29 @@ port = 7000
 
 
 async def loop():
-    global args, counter, lat_x, lat_y
+    global args, counter, lat_x, lat_y, spout
     run = True
     device = torch.device('cuda')
 
-    #---Spout
-    # create spout object
-    spout = Spout(silent = False, width = 1024, height = 1024)
-    # create sender
-    spout.createSender('input_gan')
-
-
-    # setup generator   #ADA
-
-    Gs_kwargs = dnnlib.EasyDict()
-    Gs_kwargs.verbose = True
-    Gs_kwargs.size = args.size
-    # print(a.size)
-    Gs_kwargs.scale_type = args.scale_type
-
-    # setup aux 
-    dconst = np.zeros([2, 1, 1, 1, 1])
-    dconst = torch.from_numpy(dconst).to(device)
-
-    # mask/blend latents with external latmask or by splitting the frame
-    if args.latmask is None:
-        nHW = [int(s) for s in args.nXY.split('-')][::-1]
-        assert len(nHW)==2, ' Wrong count nXY: %d (must be 2)' % len(nHW)
-        n_mult = nHW[0] * nHW[1]
-        if n_mult > 1: print(' Latent blending w/split frame %d x %d' % (nHW[1], nHW[0]))
-        lmask = np.tile(np.asarray([[[[1]]]]), (1,n_mult,1,1))
-        Gs_kwargs.countHW = nHW
-        Gs_kwargs.splitfine = 0.
-    else:
-        print(' Latent blending with mask', args.latmask)
-        n_mult = 2
-        if osp.isfile(args.latmask): # single file
-            lmask = np.asarray([[img_read(args.latmask)[:,:,0] / 255.]]) # [1,1,h,w]
-        elif osp.isdir(args.latmask): # directory with frame sequence
-            lmask = np.expand_dims(np.asarray([img_read(f)[:,:,0] / 255. for f in img_list(args.latmask)]), 1) # [n,1,h,w]
-        else:
-            print(' !! Blending mask not found:', args.latmask); exit(1)
-        print(' latmask shape', lmask.shape)
-        lmask = np.concatenate((lmask, 1 - lmask), 1) # [frm,2,h,w]
-    lmask = torch.from_numpy(lmask).to(device)
-
-    #ADA
+    if not args.save_imgs:
+        #---Spout
+        # create spout object
+        spout = Spout(silent = False, width = 1024, height = 1024)
+        # create sender
+        spout.createSender('input_gan')
 
 
     #Load Network
     print('Loading networks from "%s"...' % args.network)
     with dnnlib.util.open_url(args.network) as f:
         G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
-        
-    if (args.extended_gen):
-        with dnnlib.util.open_url(r"models\network-snapshot-010990-Gs.pkl") as fs:
-            custom = True
-            G = legacy.load_network_pkl(fs, **Gs_kwargs)['G_ema'].to(device) # type: ignore
-            print(' out shape', G.output_shape[1:])
 
 
     if args.save_imgs:
-        os.makedirs(parser.add_argumentoutdir, exist_ok=True)
+        os.makedirs(args.outdir, exist_ok=True)
 
     # setup seeds
+    print(len(seeds))
     seed = 0
     z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
     label = torch.zeros([1, G.c_dim], device=device)
@@ -308,11 +258,12 @@ async def loop():
     #---UPDATE
     while run: # Ctrl+C to stop
 
-        # check on close window
-        spout.check()
+        if not args.save_imgs:
+            # check on close window
+            spout.check()
 
-        for i in range (16):
-            await asyncio.sleep(0.0)
+            for i in range (64):
+                await asyncio.sleep(0.0)
 
         # update time
         current_time = datetime.datetime.now()
@@ -324,12 +275,16 @@ async def loop():
 
 
         #---UPDATE SEEDS    
-        lat_x += time_diff * speed
+        if args.save_imgs:
+            lat_x += (1. / args.target_fps) * speed
+        else:
+            lat_x += time_diff * speed
         last_val = np.floor(lat_x)
         frac_val = abs(lat_x - np.trunc(lat_x))
         if lat_x < 0.:
             frac_val = 1. - frac_val
         next_val = np.ceil(lat_x)
+        # print(f"time_diff: {time_diff} | speed: {speed} | lat_x: {lat_x} | last_val: {last_val}")
 
         last_item = int(last_val)%len(seeds)
         next_item = int(next_val)%len(seeds)
@@ -344,10 +299,6 @@ async def loop():
         z = torch.from_numpy(z).to(device)
 
 
-        #---UPDATE AUX  #ADA
-        dc      = dconst[0]
-        latmask = lmask[last_item % len(lmask)] if lmask is not None else [None]
-
 
         #---GENERATION
         # Construct an inverse rotation/translation matrix and pass to the generator.  The
@@ -359,17 +310,14 @@ async def loop():
             G.synthesis.input.transform.copy_(torch.from_numpy(m))
 
 
-        if not args.extended_gen:
-            img = G(z, label, truncation_psi=psi, noise_mode=args.noise_mode)
-        else:
-            img = G(z, label, latmask, dc, truncation_psi=psi, noise_mode=args.noise_mode)
+        img = G(z, label, truncation_psi=psi, noise_mode=args.noise_mode)
 
         img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
         data = img[0].cpu().numpy()
 
 
         #---SEND
-        if (args.send_texture):
+        if not args.save_imgs:
             spout.send(data)
             # image = PIL.Image.fromarray(data, 'RGB')
             # spout.send(image)
@@ -379,9 +327,13 @@ async def loop():
             print(f"avg_fps: {fps:0.4f}")
 
         counter += 1
-        if (args.save_imgs):
-            PIL.Image.fromarray(data, 'RGB').save(f'{args.outdir}/seed_{seed:04d}_t_{psi:0.2f}.png')
+        if args.save_imgs:
             # PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/seed_{seed:04d}_t_{psi:0.2f}.png')
+            PIL.Image.fromarray(data, 'RGB').save(f'{args.outdir}/seed_{counter:04d}_t_{psi:0.2f}.png')
+            if next_val > len(seeds):
+                run = False
+
+            
 
 
 

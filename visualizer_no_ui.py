@@ -183,6 +183,8 @@ class Visualizer(imgui_window.ImguiWindow):
 
         max_w = self.content_width
         max_h = self.content_height
+        # max_w = self.window_width       ##NO_GUI
+        # max_h = self.window_height
         pos = np.array([max_w / 2, max_h / 2])
 
         if 'image' in self.result:
@@ -194,6 +196,7 @@ class Visualizer(imgui_window.ImguiWindow):
                     self._tex_obj.update(self._tex_img)
             zoom = min(max_w / self._tex_obj.width, max_h / self._tex_obj.height)
             zoom = np.floor(zoom) if zoom >= 1 else zoom
+            zoom = 2
             self._tex_obj.draw(pos=pos, zoom=zoom, align=0.5, rint=True)
         if 'error' in self.result:
             self.print_error(self.result.error)
@@ -347,7 +350,7 @@ def global_handler(address: str, *args: List[Any]) -> None:
 
     
     count_size[0] += 1
-    if count_size[0] % 5000 == 0:
+    if count_size[0] % 6000 == 0:
         current_time = datetime.datetime.now()
         print(f"Setting global values: {hands_vec[0]}, {hands_vec[1]}. Screen sizes: {screen_size[0]}, {screen_size[1]} ---> {count_size[0]} / {current_time}")
 
@@ -557,7 +560,7 @@ async def main(
     """
     viz = Visualizer(capture_dir=capture_dir)
     osc_setup(viz)
-    viz.latent_widget.latent.classes = False     ##NO_GUI
+    viz.latent_widget.latent.classes = True     ##NO_GUI
 
     if browse_dir is not None:
         viz.pickle_widget.search_dirs = [browse_dir]
