@@ -180,7 +180,7 @@ parser.add_argument('--speed', type=float, help='speed', default=.1,)
 parser.add_argument('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const')
 parser.add_argument('--translate', help='Translate XY-coordinate (e.g. \'0.3,1\')', type=parse_vec2, default='0,0', metavar='VEC2')
 parser.add_argument('--rotate', help='Rotation angle in degrees', type=float, default=0, metavar='ANGLE')
-parser.add_argument('--send_texture', help='send texture over spout', action='store_true', default=True)
+# parser.add_argument('--send_texture', help='send texture over spout', action='store_true', default=True)
 parser.add_argument('--save_imgs', help='save images', action='store_true')
 parser.add_argument('--target_fps', help='target fps', type=float, default=60)
 

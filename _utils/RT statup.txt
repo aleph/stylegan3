@@ -3,15 +3,37 @@ cd C:\Users\aless\tensor\stylegan3
 cd tensor\stylegan3
 conda activate stylegan3
 
-python gen_images_spout.py --seeds=100-300 --network=models\network-snapshot-010990.pkl
+python gen_images_spout.py --seeds=10000-30000 --network=models\network-snapshot-010990.pkl
 python gen_images_spout.py --seeds=1000-11000 --network=models\02-stylegan3-rt\network-snapshot-000720.pkl
 python gen_images_spout.py --seeds=100-120 --network=models\02-stylegan3-rt\network-snapshot-000720.pkl --save_imgs --outdir _out/ters_rt
 
-python ada_src/gen_images_spout_extended.py --seeds=1000-11000 --size 1024-1024 --nXY 2-1 --network=models\network-snapshot-010990-Gs.pkl --extended_gen
-python ada_src/gen_images_spout_extended.py --seeds=1000-11000 --network=models\network-snapshot-010990.pkl
+python ada_src/gen_images_spout_extended.py --seeds=10000-30000 --size 1024-1024 --nXY 1-2 --network=models\network-snapshot-010990-Gs.pkl --extended_gen
+python ada_src/gen_images_spout_extended.py --seeds=10000-30000 --size 1024-1024 --nXY 1-2 --network=models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl --extended_gen
+python ada_src/gen_images_spout_extended.py --seeds=10000-30000 --network=models\network-snapshot-010990.pkl
+
+python ada_src/gen_images_spout_extended.py --seeds=10000-30000 --size 1024-1024 --nXY 1-2 --network=models\network-snapshot-010990-Gs.pkl --extended_gen --latmask=_in/constant5.png
 
 
 conda list -e > requirements.txt
+
+
+conda activate stylegan3
+cd tensor\stylegan3-latent-walker
+
+python latent_walker.py
+
+C:\Users\Alessandro\tensor\stylegan3-latent-walker\models\network-snapshot-010990.pkl
+C:\Users\Alessandro\tensor\stylegan3-latent-walker\models\network-snapshot-000320.pkl
+C:\Users\Alessandro\tensor\stylegan3-latent-walker\models\stylegan3-r-ffhq-config.pkl
+"C:\Users\Alessandro\tensor\stylegan3\models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl"
+C:\Users\Alessandro\tensor\stylegan3\models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216.pkl
+
+"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+python ada_src/model_convert.py -r --source "C:\Users\Alessandro\tensor\stylegan3\models\network-snapshot-010990.pkl" --out_dir "./models"
+
+
+python projector.py --outdir=_out/project --target=./_in/rick.jpeg --network=C:\Users\Alessandro\tensor\stylegan3\models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216.pkl
 
 
 

@@ -28,6 +28,8 @@ import argparse
 
 from util.utilgan import img_read, img_list      # using ada
 
+import torch.nn.functional as F
+
 # ---- OSC -----
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import BlockingOSCUDPServer
@@ -132,12 +134,21 @@ def cublerp(points, steps, fstep):
 
 def get_speed(address, *args):
     global speed
-    speed = args[0]
+
+    if not np.isnan(args[0]):
+        speed[0] = args[0]
+    if len(args) > 1:
+        if not np.isnan(args[1]):
+            speed[1] = args[1]
 
 def get_psi(address, *args):
-    global psi,counter
-    psi = args[0]
-    # print(f"psi: {psi} | counter: {counter}")
+    global psi
+
+    if not np.isnan(args[0]):
+        psi[0] = args[0]
+    if len(args) > 1:
+        if not np.isnan(args[1]):
+            psi[1] = args[1]
 
 def get_y(address, *args):
     global lat_y
@@ -161,6 +172,11 @@ def get_interpolation(address, *args):
     global interpolation
     interpolation = args[0]
     print(f"interpolation: {interpolation}")
+    
+def get_projection(address, *args):
+    global projection
+    projection = bool(args[0])
+    print(f"projection: {projection}")
 
 def default_handler(address, *args):
     print(f"DEFAULT {address}: {args}")
@@ -176,11 +192,11 @@ parser.add_argument('--seeds_csv', help='use a csv list of seeds', default='')
 parser.add_argument('--seeds', type=parse_range, help='List of random seeds (e.g., \'0,1,4-6\')', required=True)
 # general
 parser.add_argument('--psi', type=float, help='Truncation psi', default=.8,)
-parser.add_argument('--speed', type=float, help='Truncation psi', default=.1,)
+parser.add_argument('--speed', type=float, help='speed', default=.1,)
 parser.add_argument('--noise-mode', help='Noise mode', type=click.Choice(['const', 'random', 'none']), default='const')
 parser.add_argument('--translate', help='Translate XY-coordinate (e.g. \'0.3,1\')', type=parse_vec2, default='0,0', metavar='VEC2')
 parser.add_argument('--rotate', help='Rotation angle in degrees', type=float, default=0, metavar='ANGLE')
-parser.add_argument('--send_texture', help='send texture over spout', action='store_true', default=True)
+# parser.add_argument('--send_texture', help='send texture over spout', action='store_true', default=True)
 parser.add_argument('--save_imgs', help='save images', action='store_true')
 
 # ada
@@ -189,6 +205,10 @@ parser.add_argument('--size', default='1024-1024', help='output resolution, set 
 parser.add_argument('--scale_type', default='symm', help="main types: pad, padside, symm, symmside")
 parser.add_argument('--latmask', default=None, help='external mask file (or directory) for multi latent blending')
 parser.add_argument('--nXY', '-n', default='1-1', help='multi latent frame split count by X (width) and Y (height)')
+parser.add_argument('--target_fps', help='target fps', type=float, default=60)
+
+parser.add_argument('--projection', help='project image', action='store_true')
+
 
 args = parser.parse_args()
 
@@ -196,13 +216,15 @@ args = parser.parse_args()
 #---Parameters
 # control
 seeds = args.seeds
-psi = args.psi
-speed = args.speed
+psi = [args.psi, args.psi]
+speed = [args.speed, args.speed]
 lat_x = 0.
 lat_y = 0.
 translate = args.translate
 rotate = args.rotate
 interpolation = 'slerp'
+projection = args.projection
+projection_strength = 1.
 
 counter = 0
 spout_size = (1024, 1024)
@@ -223,6 +245,7 @@ dispatcher.map("/seeds", get_seeds)
 dispatcher.map("/rotate", get_rotate)
 dispatcher.map("/translate", get_translate)
 dispatcher.map("/interpolation", get_interpolation)
+dispatcher.map("/projection", get_interpolation)
 
 ip = "127.0.0.1"
 port = 7000
@@ -230,15 +253,20 @@ port = 7000
 
 
 async def loop():
-    global args, counter, lat_x, lat_y, G
+    global args, counter, lat_x, lat_y, G, spout
     run = True
     device = torch.device('cuda')
 
     #---Spout
-    # create spout object
-    spout = Spout(silent = False, width = spout_size[1], height = spout_size[0])
-    # create sender
-    spout.createSender('input_gan')
+    if not args.save_imgs:
+        #---Spout
+        # create spout object
+        spout = Spout(silent = True, width = spout_size[1], height = spout_size[0], n_rec= 2)
+        # create sender
+        spout.createSender('input_gan')
+        spout.createReceiver('output_gan', id = 0)
+        spout.createReceiver('target_gan', id = 1)
+
 
 
     # setup generator   #ADA
@@ -251,7 +279,9 @@ async def loop():
 
     # setup aux 
     dconst = np.zeros([2, 1, 1, 1, 1])
+    lmask_base = None
     dconst = torch.from_numpy(dconst).to(device)
+    n_mult = 1
 
     # mask/blend latents with external latmask or by splitting the frame
     if args.latmask is None:
@@ -259,7 +289,7 @@ async def loop():
         assert len(nHW)==2, ' Wrong count nXY: %d (must be 2)' % len(nHW)
         n_mult = nHW[0] * nHW[1]
         if n_mult > 1: print(' Latent blending w/split frame %d x %d' % (nHW[1], nHW[0]))
-        lmask = np.tile(np.asarray([[[[1]]]]), (1,n_mult,1,1))
+        lmask_base = np.tile(np.asarray([[[[1]]]]), (1,n_mult,1,1))
         Gs_kwargs.countHW = nHW
         Gs_kwargs.splitfine = 0.
     else:
@@ -272,11 +302,10 @@ async def loop():
         else:
             print(' !! Blending mask not found:', args.latmask); exit(1)
         print(' latmask shape', lmask.shape)
-        lmask = np.concatenate((lmask, 1 - lmask), 1) # [frm,2,h,w]
-    lmask = torch.from_numpy(lmask).to(device)
+        lmask_base = np.concatenate((lmask, 1 - lmask), 1) # [frm,2,h,w]
+    lmask = torch.from_numpy(lmask_base).to(device)
 
     #ADA
-
 
     #Load Network
     print('Loading networks from "%s"...' % args.network)        
@@ -292,9 +321,10 @@ async def loop():
 
 
     if args.save_imgs:
-        os.makedirs(parser.add_argumentoutdir, exist_ok=True)
+        os.makedirs(args.outdir, exist_ok=True)
 
     # setup seeds
+    print(f"seeds: {len(seeds)}")
     seed = 0
     z = torch.from_numpy(np.random.RandomState(seed).randn(1, G.z_dim)).to(device)
     label = torch.zeros([1, G.c_dim], device=device)
@@ -303,19 +333,69 @@ async def loop():
     # cubic_latents = cublerp(cubic_key_latents, len(seeds), transit)
 
 
+    #---PROJECTION
+    w_avg_samples           = 10000
+    target                  = None
+    initial_noise_factor    = 0.05
+    regularize_noise_weight = 1e5
+    initial_learning_rate   = 0.02
+
+    if projection:
+
+        # Compute w stats.
+        z_samples = np.random.RandomState(123).randn(w_avg_samples, G.z_dim)
+        w_samples = G.mapping(torch.from_numpy(z_samples).to(device), None)  # [N, L, C]
+        print('Projecting in W+ latent space...')
+        w_avg = torch.mean(w_samples, dim=0, keepdim=True)  # [1, L, C]
+        w_std = (torch.sum((w_samples - w_avg) ** 2) / w_avg_samples) ** 0.5
+        # Setup noise inputs (only for StyleGAN2 models)
+        noise_buffs = {name: buf for (name, buf) in G.synthesis.named_buffers() if 'noise_const' in name}
+        w_noise_scale = w_std * initial_noise_factor # noise scale is constant
+        lr = initial_learning_rate # learning rate is constant
+
+        # Load the VGG16 feature detector.
+        # url = 'e:/sg3-pretrained/metrics/vgg16.pkl'
+        # Load VGG16 feature detector.
+        url = 'https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/vgg16.pt'
+        with dnnlib.util.open_url(url) as f:
+            vgg16 = torch.jit.load(f).eval().to(device)
+        print("Loaded vgg16...")
+
+        w_opt = w_avg.clone().detach().requires_grad_(True)
+        optimizer = torch.optim.Adam([w_opt] + list(noise_buffs.values()), betas=(0.9, 0.999), lr=initial_learning_rate)
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
+        # Init noise.
+        for buf in noise_buffs.values():
+            buf[:] = torch.randn_like(buf)
+            buf.requires_grad = True       
+        # == End setup from project() == #
+
+
+
+
     # setup time
     current_time = datetime.datetime.now()
     last_time = datetime.datetime.now()
     fps = 0
 
+    
+    #---TEST
+    z2 = np.random.RandomState(1000).randn(1, G.z_dim)
+    z3 = np.random.RandomState(1000).randn(1, G.z_dim)
+
+    zb = slerp_single(z2, z3, 0.)[0]
+
 
     #---UPDATE
     while run: # Ctrl+C to stop
 
-        # check on close window
-        spout.check()
+        if not args.save_imgs:
+            # check on close window
+            spout.check()
 
-        for i in range (16):
+        for i in range (128):
             await asyncio.sleep(0.0)
 
         # update time
@@ -328,7 +408,11 @@ async def loop():
 
 
         #---UPDATE SEEDS    
-        lat_x += time_diff * speed
+        if args.save_imgs:
+            lat_x += (1. / args.target_fps) * speed[0]
+        else:
+            lat_x += time_diff * speed[0]
+
         last_val = np.floor(lat_x)
         frac_val = abs(lat_x - np.trunc(lat_x))
         if lat_x < 0.:
@@ -345,7 +429,74 @@ async def loop():
         if interpolation == 'cubic':
             z = cs(last_item + frac_val) 
 
+        #---test
+        if args.extended_gen and n_mult > 1:
+            # z2 = np.random.RandomState(last_item + 1000).randn(1, G.z_dim)
+            # z3 = np.random.RandomState(next_item + 1000).randn(1, G.z_dim)
+
+            # zb = slerp_single(z2, z3, frac_val)[0]
+            # if interpolation == 'cubic':
+            #     zb = cs(last_item + frac_val) 
+
+            z = np.concatenate((z, zb), axis=0)
+            # z.append(zb)
+
         z = torch.from_numpy(z).to(device)
+
+        # w = G.mapping(z, label, truncation_psi=psi[0])
+
+
+        #---PROJECTION
+        if projection:
+            target_spout = spout.receive(id = 1)
+            if target_spout.shape[0] > 0:
+                target = torch.tensor(data.transpose([2, 0, 1]), device=device)
+                target = target.unsqueeze(0).to(device).to(torch.float32)
+                if target.shape[2] > 256:
+                    target = F.interpolate(target, size=(256, 256), mode='area')
+                target_features = vgg16(target, resize_images=False, return_lpips=True) 
+
+                # Synth images from opt_w.
+                w_noise = torch.randn_like(w_opt) * w_noise_scale
+                ws = w_opt + w_noise
+                synth_images = G.synthesis(ws, noise_mode='const')
+                # Downsample image to 256x256 if it's larger than that. VGG was built for 224x224 images.
+                synth_images = (synth_images + 1) * (255/2)
+                if synth_images.shape[2] > 256:
+                    synth_images = F.interpolate(synth_images, size=(256, 256), mode='area')
+
+                # Features for synth images.
+                synth_features = vgg16(synth_images, resize_images=False, return_lpips=True)
+                dist = (target_features - synth_features).square().sum()
+
+                # Noise regularization.
+                reg_loss = 0.0
+                for v in noise_buffs.values():
+                    noise = v[None, None, :, :]  # must be [1,1,H,W] for F.avg_pool2d()
+                    while True:
+                        reg_loss += (noise * torch.roll(noise, shifts=1, dims=3)).mean() ** 2
+                        reg_loss += (noise * torch.roll(noise, shifts=1, dims=2)).mean() ** 2
+                        if noise.shape[2] <= 8:
+                            break
+                        noise = F.avg_pool2d(noise, kernel_size=2)
+                loss = dist + reg_loss * regularize_noise_weight
+
+                # Step
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                optimizer.step()
+                
+                # Normalize noise.
+                with torch.no_grad():
+                    for buf in noise_buffs.values():
+                        buf -= buf.mean()
+                        buf *= buf.square().mean().rsqrt()
+                
+
+                w = ws[0].detach()[0]
+                
+        else:
+            w = G.mapping(z, label, truncation_psi=psi[0])
 
 
         #---GENERATION
@@ -358,20 +509,44 @@ async def loop():
             G.synthesis.input.transform.copy_(torch.from_numpy(m))
 
 
+        #---TEST
+        data_mask = spout.receive(id = 0)
+        if data_mask.shape[0] > 0:
+            # print('data_mask: ', data_mask.shape)
+            data_mask = np.asarray([[data_mask[:,:,0] / 255.]]) # [1,1,h,w]
+            data_mask = np.concatenate((data_mask, 1 - data_mask), 1) # [frm,2,h,w]
+
+            lmask = torch.from_numpy(data_mask).to(device)
+
+
+        if len(w.shape) == 2:
+            w = w.unsqueeze(0)  # An individual dlatent => [1, G.mapping.num_ws, G.mapping.w_dim]
+        # print('w:', w.shape)
+
         if not args.extended_gen:
-            img = G(z, label, truncation_psi=psi, noise_mode=args.noise_mode)
+            # img = G(z, label, truncation_psi=psi, noise_mode=args.noise_mode)
+            img = G.synthesis(w, noise_mode=args.noise_mode)
         else:
             dc      = dconst[0]
             latmask = lmask[last_item % len(lmask)] if lmask is not None else [None]
             
-            img = G(z, label, latmask, dc, truncation_psi=psi, noise_mode=args.noise_mode)
+            # img = G(z, label, latmask, dc, truncation_psi=psi, noise_mode=args.noise_mode)
+            img = G.synthesis(w, latmask, dc, noise_mode=args.noise_mode)
+            # # print all the G **kwargs for debugging
+            # print('G_kwargs:', G.synthesis.__dict__)
+
+            # # print all the G *input for debugging
+
+
+
 
         img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
         data = img[0].cpu().numpy()
 
 
         #---SEND
-        if (args.send_texture):
+        # if (args.send_texture):
+        if not args.save_imgs:
             spout.send(data)
             # image = PIL.Image.fromarray(data, 'RGB')
             # spout.send(image)
@@ -381,9 +556,11 @@ async def loop():
             print(f"avg_fps: {fps:0.4f}")
 
         counter += 1
-        if (args.save_imgs):
-            PIL.Image.fromarray(data, 'RGB').save(f'{args.outdir}/seed_{seed:04d}_t_{psi:0.2f}.png')
+        if args.save_imgs:
             # PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/seed_{seed:04d}_t_{psi:0.2f}.png')
+            PIL.Image.fromarray(data, 'RGB').save(f'{args.outdir}/seed_{counter:04d}_t_{psi[0]:0.2f}.png')
+            if next_val > len(seeds):
+                run = False
 
 
 
