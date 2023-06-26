@@ -219,6 +219,7 @@ seeds = args.seeds
 psi = [args.psi, args.psi]
 speed = [args.speed, args.speed]
 lat_x = 0.
+lat_xb = 0.
 lat_y = 0.
 translate = args.translate
 rotate = args.rotate
@@ -253,7 +254,7 @@ port = 7000
 
 
 async def loop():
-    global args, counter, lat_x, lat_y, G, spout
+    global args, counter, lat_x, lat_xb, lat_y, G, spout
     run = True
     device = torch.device('cuda')
 
@@ -338,7 +339,7 @@ async def loop():
     target                  = None
     initial_noise_factor    = 0.05
     regularize_noise_weight = 1e5
-    initial_learning_rate   = 0.02
+    initial_learning_rate   = 0.025
 
     if projection:
 
@@ -431,26 +432,37 @@ async def loop():
 
         #---test
         if args.extended_gen and n_mult > 1:
-            # z2 = np.random.RandomState(last_item + 1000).randn(1, G.z_dim)
-            # z3 = np.random.RandomState(next_item + 1000).randn(1, G.z_dim)
+            lat_xb += time_diff * speed[0] * .05
 
-            # zb = slerp_single(z2, z3, frac_val)[0]
-            # if interpolation == 'cubic':
-            #     zb = cs(last_item + frac_val) 
+            last_val = np.floor(lat_xb)
+            frac_val = abs(lat_xb - np.trunc(lat_xb))
+            if lat_xb < 0.:
+                frac_val = 1. - frac_val
+            next_val = np.ceil(lat_xb)
+
+            last_item = int(last_val)%len(seeds)
+            next_item = int(next_val)%len(seeds)
+
+            z2 = np.random.RandomState(last_item + 1000).randn(1, G.z_dim)
+            z3 = np.random.RandomState(next_item + 1000).randn(1, G.z_dim)
+
+            zb = slerp_single(z2, z3, frac_val)[0]
+            if interpolation == 'cubic':
+                zb = cs(last_item + frac_val) 
 
             z = np.concatenate((z, zb), axis=0)
             # z.append(zb)
 
         z = torch.from_numpy(z).to(device)
 
-        # w = G.mapping(z, label, truncation_psi=psi[0])
+        w = G.mapping(z, label, truncation_psi=psi[0])
 
 
         #---PROJECTION
         if projection:
             target_spout = spout.receive(id = 1)
             if target_spout.shape[0] > 0:
-                target = torch.tensor(data.transpose([2, 0, 1]), device=device)
+                target = torch.tensor(target_spout.transpose([2, 0, 1]), device=device)
                 target = target.unsqueeze(0).to(device).to(torch.float32)
                 if target.shape[2] > 256:
                     target = F.interpolate(target, size=(256, 256), mode='area')
@@ -481,6 +493,10 @@ async def loop():
                         noise = F.avg_pool2d(noise, kernel_size=2)
                 loss = dist + reg_loss * regularize_noise_weight
 
+                if (counter % 60 == 0 and counter > 0):
+                    print(f"loss: {loss:0.4f}")
+
+
                 # Step
                 optimizer.zero_grad(set_to_none=True)
                 loss.backward()
@@ -493,11 +509,13 @@ async def loop():
                         buf *= buf.square().mean().rsqrt()
                 
 
-                w = ws[0].detach()[0]
+                w = w_opt.detach()[0]
+                w = w_avg + (w - w_avg) * psi[0]
                 
-        else:
-            w = G.mapping(z, label, truncation_psi=psi[0])
+        # else:
+            # w = G.mapping(z, label, truncation_psi=psi[0])
 
+        # print('w: ', w.shape)
 
         #---GENERATION
         # Construct an inverse rotation/translation matrix and pass to the generator.  The
@@ -536,7 +554,6 @@ async def loop():
             # print('G_kwargs:', G.synthesis.__dict__)
 
             # # print all the G *input for debugging
-
 
 
 
