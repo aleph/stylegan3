@@ -151,7 +151,33 @@ ffmpeg -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch
 ffmpeg -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_final\lerp_psi_11.mp4" -map_metadata 0 -vf "transpose=2" "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_final\lerp_psi_11_r2.mp4"
 ffmpeg -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_final\vid_v3d_psi4b_a7_A.mp4" -map_metadata 0 -vf "transpose=2" "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_final\vid_v3d_psi4b_a7r_A.mp4"
 
+
 -vcodec libx264
+-preset slow
+-crf 18
+-filter:v "crop=1080:3584"
+-x264-params "nal-hrd=cbr" -b:v 60M -minrate 60M -maxrate 60M -bufsize 120M
+
+## [SMART LIFE] ##
+ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5b_slf_09_4000_a0\%06d.jpg" -ss 0:00:00 -t 200 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -x264-params "nal-hrd=cbr" -b:v 60M -minrate 60M -maxrate 60M -bufsize 120M -c:a aac -fflags +shortest -filter:v "crop=1080:3584" "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5b_slf_09_4000_a0_A_crop_cbr.mp4"
+ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v5d_psi4b_slf_14_4000_a0\%06d.jpg" -ss 0:00:00 -t 200 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_14_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v5d_psi4b_slf_14_4000_a0_A.mp4"
+
+
+
+
+ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi7b_slf_09_4000_d0\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi7b_slf_09_4000_d0_A.mp4" && ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v7d_psi5b_slf_09_8000_d4\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v7d_psi5b_slf_09_8000_d4_A.mp4" && ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_8-96_v4d_psi5b_slf_09_4000_d4\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_8-96_v4d_psi5b_slf_09_4000_d4_A.mp4" && ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_8-96peak_v4d_psi5b_slf_09_4000_d4\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_8-96peak_v4d_psi5b_slf_09_4000_d4_A.mp4" && ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_12-80_v4d_psi5b_slf_09_4000_d4\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_12-80_v4d_psi5b_slf_09_4000_d4_A.mp4" && ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v6d_psi5b_slf_09_8000_d4\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v6d_psi5b_slf_09_8000_d4_A.mp4" && ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5b_slf_09_8000_d4\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -c:v libx264 -crf 18 -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5b_slf_09_8000_d4_A.mp4"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -165,8 +191,13 @@ ffmpeg -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-
 ffmpeg -y -r 120 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_vc_psi0.mp4 _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\test_vid_vc_psi0_120.mp4
 ffmpeg -y -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\_out\test_vid_v1_psi4_A.mp4 -filter:v fps=12 _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\_out\test_vid_v1_psi4_12_A.mp4
 
-
 ffmpeg -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v3d_psi4b_b2.mp4 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v3d_psi4b_a2.mp4  -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v3d_psi4b_c2.mp4   -ss 0:00:00 -t 800 -i _out\out_SGAN2\00024-stylegan2-incisioni-h3_m-1024x1024-gpus1-batch32-gamma6.6\_audio\23_01_19_AB_Orto_Botanico_SoundTrack.wav -filter_complex "hstack=inputs=3,format=yuv420p" -c:v libx264 -crf 18 -s 1632:1920 _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\compared_abc_2.mp4
+
+
+ffmpeg -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\###test_8-96_v4d_psi5b_slf_09_4000_d4_A.mp4 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\###test_v4d_psi5b_slf_09_8000_d4_A.mp4  -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\###test_v7d_psi5b_slf_09_8000_d4_A.mp4 -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -filter_complex "hstack=inputs=3,format=yuv420p" -c:v libx264 -crf 18 -s 1632:1920 _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_d_compare_A.mp4
+
+
+
 
 
 
@@ -185,6 +216,9 @@ ffmpeg.exe -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-b
 ffmpeg.exe -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_final\vid_v3d_psi4b_c8_A.mp4" -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\EQ_(Low & Mid_Cut)\23_02_07_AB_Orto_Botanico_SoundTrack_C_LowCut.wav" -vcodec copy -map 0:0 -map 1:0 "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_final\vid_v3d_psi4b_c8_A2.mp4"
 
 
+## [SMART LIFE] ##
+ffmpeg.exe -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\vid_v3d_psi4b_a8_2_A.mp4" -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life.wav -vcodec copy -map 0:0 -map 1:0 "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\vid_v3d_psi4b_a8_test_SLF_A_1.mp4"
+ffmpeg.exe -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\vid_v3d_psi4b_a8_2_A.mp4" -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_14_AB_Smart_Life.wav -vcodec copy -map 0:0 -map 1:0 "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\vid_v3d_psi4b_a8_test_SLF_A_2.mp4"
 
 
 -stream_loop -1  -movflags +faststart  23_01_16_AB_Orto_Botanico_SoundTrack_Timbro_V1.wav
@@ -244,6 +278,40 @@ python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4
 python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_seeds_c_1" --frames "75-20" --fps 2 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_c.csv --params_path _gen\params_a2.csv  --latmask "_in/masks" --export_csv
 
 
-
-
 python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v3d_psi4b_c3" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_c.csv --params_path _gen\params_audio_v3d_psi4b.csv --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v3d_psi4b_b3" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_b.csv --params_path _gen\params_audio_v3d_psi4b.csv --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v3d_psi4b_a2_30" --frames "48000-20" --fps 60 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_a.csv --params_path _gen\params_audio_v3d_psi4b.csv --latmask "_in/masks" --export_csv --end_point .25 && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v3d_psi4b_a2_60" --frames "48000-20" --fps 60 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_a.csv --params_path _gen\params_audio_v3d_psi4b_60.csv --latmask "_in/masks" --export_csv --end_point .25
+
+
+
+
+
+
+
+## [SMART LIFE] ##
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v5d_psi4b_slf_14_4000_a0" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_a.csv --params_path _gen\params_audio_v5d_psi4b_4000_SLF_14.csv --latmask "_in/masks" --export_csv --end_point .25
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v5d_psi5b_slf_09_4000_d0" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d.csv --params_path _gen\params_audio_v5d_psi5b_4000_SLF_09.csv --latmask "_in/masks" --export_csv --end_point .25
+
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v4d_psi5b_slf_09_4000_d0" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d.csv --params_path _gen\params_audio_v4d_psi5b_4000_SLF_09.csv --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v4d_psi5b_slf_09_4000_d0_col" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_color.csv --params_path _gen\params_audio_v4d_psi5b_4000_SLF_09.csv --latmask "_in/masks" --export_csv && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v4d_psi6a_slf_09_4000_d0_col" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_color.csv --params_path _gen\params_audio_v4d_psi6a_4000_SLF_09.csv --latmask "_in/masks" --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v4d_psi5b_slf_14_4000_d0" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d.csv --params_path _gen\params_audio_v4d_psi5b_4000_SLF_14.csv --latmask "_in/masks" --export_csv  && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v4d_psi7b_slf_09_4000_d0" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d.csv --params_path _gen\params_audio_v4d_psi7b_4000_SLF_09.csv --latmask "_in/masks" --export_csv  && python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v4d_psi5b_slf_09_8000_d0" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d.csv --params_path _gen\params_audio_v4d_psi5b_8000_SLF_09.csv --latmask "_in/masks" --export_csv 
+
+
+
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v7d_psi5c_slf_09_8000_d5" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_5.csv --params_path _gen\params_audio_v7d_psi5c_8000_SLF_09.csv --latmask "_in/masks" --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v8d_psi5b_slf_09_8000_d5" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_5.csv --params_path _gen\params_audio_v8d_psi5b_8000_SLF_09.csv --latmask "_in/masks" --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_v9d_psi5b_slf_09_8000_d5" --frames "24000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_5.csv --params_path _gen\params_audio_v9d_psi5b_8000_SLF_09.csv --latmask "_in/masks" --export_csv
+
+
+
+
+
+
+## TEST SEEDS ##
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_seeds_10-12000" --frames "2000-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_10-12000.csv --params_path _gen\params_a2.csv --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_seeds_d_2_color" --frames "80-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_color.csv --params_path _gen\params_a2.csv --latmask "_in/masks" --export_csv
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_seeds_d_2_b" --frames "80-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d.csv --params_path _gen\params_a2.csv --latmask "_in/masks" --export_csv
+
+python ada_src/_genSGAN2_general.py --model "models\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\network-snapshot-000216-Gs.pkl" --out_dir "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6" --gen_name "test_seeds_d_4" --frames "80-20" --fps 30 --slerp --size "1088-3840" --scale_type 'symm' -n "1-1" --splitfine 0. --seed 42 --verbose --use_csv --seeds_path _gen\seeds_osc_d_4.csv --params_path _gen\params_a2.csv --latmask "_in/masks" --export_csv
+
+
+
+
+

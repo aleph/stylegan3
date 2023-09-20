@@ -7,3 +7,8 @@ _training-runs
 datasets
 osc_fake_data.csv
 _in
+_gen/sound_Values_smooth_23_08_09_AB_Smart_Life.txt
+_gen/sound_Values_all_23_08_09_AB_Smart_Life.txt
+_gen/Backup
+*.png
+_gen/_old
