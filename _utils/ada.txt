@@ -166,15 +166,7 @@ ffmpeg -framerate 30 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-
 ffmpeg -framerate 60 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5e_slf_09_8000_d7_master\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life_Master.wav -c:v libx264 -x264-params "nal-hrd=cbr" -b:v 80M -minrate 80M -maxrate 80M -bufsize 160M -c:a aac -fflags +shortest -filter:v "crop=1080:3584:8:192" "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5e_slf_09_8000_d7_master_60_A_crop2_cbr_80.mp4"
 
 
-ffmpeg -framerate 60 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5e_slf_09_8000_d7_master\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life_Master.wav -c:v libx264 -x264-params "nal-hrd=cbr" -b:v 80M -minrate 80M -maxrate 80M -bufsize 160M -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5e_slf_09_8000_d7_master_60_A_cbr_80.mp4" && ffmpeg -framerate 60 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5b_slf_09_8000_d7_master\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life_Master.wav -c:v libx264 -x264-params "nal-hrd=cbr" -b:v 80M -minrate 80M -maxrate 80M -bufsize 160M -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5b_slf_09_8000_d7_master_60_A_cbr_80.mp4" && ffmpeg -framerate 60 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5e_slf_09_8000_d6_master\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life_Master.wav -c:v libx264 -x264-params "nal-hrd=cbr" -b:v 80M -minrate 80M -maxrate 80M -bufsize 160M -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5e_slf_09_8000_d6_master_60_A_cbr_80.mp4"
-
-
-
-
-
-
-
-
+ffmpeg -framerate 60 -y -stats -thread_queue_size 1024 -i "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\test_v4d_psi5e_slf_09_8000_d7_master\%06d.jpg" -ss 0:00:00 -t 800 -i _out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\Audio\Smart_life\23_08_09_AB_Smart_Life_Master.wav -c:v libx264 -x264-params "nal-hrd=cbr" -b:v 80M -minrate 80M -maxrate 80M -bufsize 160M -c:a aac -fflags +shortest "_out\out_SGAN2\00033-stylegan2-incisioni-h4_m3b-1024x1024-gpus1-batch32-gamma6.6\_out\smart_life\test_v4d_psi5e_slf_09_8000_d7_master_60_A_cbr_80.mp4"
 
 
 
